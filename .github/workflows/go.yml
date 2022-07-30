@@ -13,9 +13,6 @@ jobs:
 
   build-test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./api
     steps:
     - uses: actions/checkout@v2
 
@@ -45,9 +42,6 @@ jobs:
         name: dev
         url: https://comp4050-square-api.fly.dev
       runs-on: ubuntu-latest
-      defaults:
-        run:
-          working-directory: ./api
       steps:
         - uses: actions/checkout@v2
         - uses: superfly/flyctl-actions/setup-flyctl@master
