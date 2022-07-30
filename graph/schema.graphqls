@@ -1,0 +1,112 @@
+# Unit
+
+type Unit {
+  id: ID!
+  name: String!
+  classes: [Class!]!
+}
+
+input NewUnit {
+  name: String!
+}
+
+# Class
+
+type Class {
+  id: ID!
+  name: String!
+  assignments: [Assignment!]!
+}
+
+input NewClass {
+  name: String!
+  unitID: ID!
+}
+
+# Assignment
+
+type Assignment {
+  id: ID!
+  name: String!
+  dueDate: String!
+  tests: [Test!]!
+  submissions: [Submission!]!
+}
+
+input NewAssignment {
+  name: String!
+  dueDate: String!
+  classID: ID!
+}
+
+# Test
+
+type Test {
+  id: ID!
+  name: String!
+}
+
+input NewTest {
+  name: String!
+  assignmentID: ID!
+}
+
+# Submission
+
+type Submission {
+  id: ID!
+  studentID: String!
+  result: Result!
+}
+
+input NewSubmission {
+  studentID: String!
+  assignmentID: ID!
+}
+
+# Result
+
+type Result {
+  id: ID!
+  score: Float!
+  date: String!
+  submissionID: ID!
+}
+
+## Queries ##
+type Query {
+  # Get all units
+  units: [Unit!]!
+  # Get a unit by id
+  unit(id: ID!): Unit
+  # Get all classes
+  classes: [Class!]!
+  # Get a class by id
+  class(id: ID!): Class
+  # Get all assignments
+  assignments: [Assignment!]!
+  # Get an assignment by id
+  assignment(id: ID!): Assignment
+  # Get all tests
+  tests: [Test!]!
+  # Get a test by id
+  test(id: ID!): Test
+  # Get all submissions
+  submissions: [Submission!]!
+  # Get a submission by id
+  submission(id: ID!): Submission
+  # Get all results
+  results: [Result!]!
+  # Get a result by id
+  result(id: ID!): Result
+}
+
+## Mutations ##
+
+type Mutation {
+  createUnit(input: NewUnit!): Unit!
+  createClass(input: NewClass!): Class!
+  createAssignment(input: NewAssignment!): Assignment!
+  createTest(input: NewTest!): Test!
+  createSubmission(input: NewSubmission!): Submission!
+}
