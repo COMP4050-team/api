@@ -45,6 +45,7 @@ input NewAssignment {
 type Test {
   id: ID!
   name: String!
+  assignmentID: String!
 }
 
 input NewTest {

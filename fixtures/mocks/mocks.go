@@ -229,6 +229,21 @@ func (mr *MockDatabaseMockRecorder) GetAssignment(id interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssignment", reflect.TypeOf((*MockDatabase)(nil).GetAssignment), id)
 }
 
+// GetAssignmentsForClass mocks base method.
+func (m *MockDatabase) GetAssignmentsForClass(classID string) ([]*db.Assignment, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAssignmentsForClass", classID)
+	ret0, _ := ret[0].([]*db.Assignment)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAssignmentsForClass indicates an expected call of GetAssignmentsForClass.
+func (mr *MockDatabaseMockRecorder) GetAssignmentsForClass(classID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAssignmentsForClass", reflect.TypeOf((*MockDatabase)(nil).GetAssignmentsForClass), classID)
+}
+
 // GetClass mocks base method.
 func (m *MockDatabase) GetClass(id string) (*db.Class, error) {
 	m.ctrl.T.Helper()
@@ -274,6 +289,21 @@ func (mr *MockDatabaseMockRecorder) GetSubmission(id interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSubmission", reflect.TypeOf((*MockDatabase)(nil).GetSubmission), id)
 }
 
+// GetSubmissionsForAssignment mocks base method.
+func (m *MockDatabase) GetSubmissionsForAssignment(assignmentID string) ([]*db.Submission, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSubmissionsForAssignment", assignmentID)
+	ret0, _ := ret[0].([]*db.Submission)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSubmissionsForAssignment indicates an expected call of GetSubmissionsForAssignment.
+func (mr *MockDatabaseMockRecorder) GetSubmissionsForAssignment(assignmentID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSubmissionsForAssignment", reflect.TypeOf((*MockDatabase)(nil).GetSubmissionsForAssignment), assignmentID)
+}
+
 // GetTest mocks base method.
 func (m *MockDatabase) GetTest(id string) (*db.Test, error) {
 	m.ctrl.T.Helper()
@@ -287,6 +317,21 @@ func (m *MockDatabase) GetTest(id string) (*db.Test, error) {
 func (mr *MockDatabaseMockRecorder) GetTest(id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTest", reflect.TypeOf((*MockDatabase)(nil).GetTest), id)
+}
+
+// GetTestsForAssignment mocks base method.
+func (m *MockDatabase) GetTestsForAssignment(assignmentID string) ([]*db.Test, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTestsForAssignment", assignmentID)
+	ret0, _ := ret[0].([]*db.Test)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTestsForAssignment indicates an expected call of GetTestsForAssignment.
+func (mr *MockDatabaseMockRecorder) GetTestsForAssignment(assignmentID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTestsForAssignment", reflect.TypeOf((*MockDatabase)(nil).GetTestsForAssignment), assignmentID)
 }
 
 // GetUnitByID mocks base method.

@@ -16,19 +16,19 @@ import (
 
 // Tests is the resolver for the tests field.
 func (r *assignmentResolver) Tests(ctx context.Context, obj *model.Assignment) ([]*model.Test, error) {
-	assignment, err := r.DB.GetAssignment(obj.ID)
+	tests, err := r.DB.GetTestsForAssignment(obj.ID)
 	if err != nil {
 		return nil, err
 	}
-	if assignment == nil {
+	if tests == nil {
 		return nil, nil
 	}
 
 	var gqlTests []*model.Test
 
-	for i, test := range assignment.Tests {
+	for _, test := range tests {
 		gqlTests = append(gqlTests, &model.Test{
-			ID:   fmt.Sprintf("%d", i),
+			ID:   fmt.Sprintf("%d", test.ID),
 			Name: test.Name,
 		})
 	}
@@ -38,19 +38,19 @@ func (r *assignmentResolver) Tests(ctx context.Context, obj *model.Assignment) (
 
 // Submissions is the resolver for the submissions field.
 func (r *assignmentResolver) Submissions(ctx context.Context, obj *model.Assignment) ([]*model.Submission, error) {
-	assignment, err := r.DB.GetAssignment(obj.ID)
+	submissions, err := r.DB.GetSubmissionsForAssignment(obj.ID)
 	if err != nil {
 		return nil, err
 	}
-	if assignment == nil {
+	if submissions == nil {
 		return nil, nil
 	}
 
 	var gqlSubmissions []*model.Submission
 
-	for i, submission := range assignment.Submissions {
+	for _, submission := range submissions {
 		gqlSubmissions = append(gqlSubmissions, &model.Submission{
-			ID:        fmt.Sprintf("%d", i),
+			ID:        fmt.Sprintf("%d", submission.ID),
 			StudentID: submission.StudentID,
 			Result: &model.Result{
 				ID:           fmt.Sprintf("%d", submission.Result.ID),
@@ -66,17 +66,17 @@ func (r *assignmentResolver) Submissions(ctx context.Context, obj *model.Assignm
 
 // Assignments is the resolver for the assignments field.
 func (r *classResolver) Assignments(ctx context.Context, obj *model.Class) ([]*model.Assignment, error) {
-	class, err := r.DB.GetClass(obj.ID)
+	assignments, err := r.DB.GetAssignmentsForClass(obj.ID)
 	if err != nil {
 		return nil, err
 	}
-	if class == nil {
+	if assignments == nil {
 		return nil, nil
 	}
 
 	var gqlAssignments []*model.Assignment
 
-	for _, assignment := range class.Assignments {
+	for _, assignment := range assignments {
 		gqlAssignments = append(gqlAssignments, &model.Assignment{
 			ID:          fmt.Sprintf("%d", assignment.ID),
 			Name:        assignment.Name,
@@ -316,7 +316,7 @@ func (r *queryResolver) Tests(ctx context.Context) ([]*model.Test, error) {
 
 	gqlTests := []*model.Test{}
 	for _, test := range tests {
-		gqlTest := &model.Test{ID: fmt.Sprintf("%d", test.ID), Name: test.Name}
+		gqlTest := &model.Test{ID: fmt.Sprintf("%d", test.ID), Name: test.Name, AssignmentID: fmt.Sprintf("%d", test.AssignmentID)}
 		gqlTests = append(gqlTests, gqlTest)
 	}
 

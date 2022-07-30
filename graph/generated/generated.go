@@ -100,8 +100,9 @@ type ComplexityRoot struct {
 	}
 
 	Test struct {
-		ID   func(childComplexity int) int
-		Name func(childComplexity int) int
+		AssignmentID func(childComplexity int) int
+		ID           func(childComplexity int) int
+		Name         func(childComplexity int) int
 	}
 
 	Unit struct {
@@ -447,6 +448,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Submission.StudentID(childComplexity), true
 
+	case "Test.assignmentID":
+		if e.complexity.Test.AssignmentID == nil {
+			break
+		}
+
+		return e.complexity.Test.AssignmentID(childComplexity), true
+
 	case "Test.id":
 		if e.complexity.Test.ID == nil {
 			break
@@ -602,6 +610,7 @@ input NewAssignment {
 type Test {
   id: ID!
   name: String!
+  assignmentID: String!
 }
 
 input NewTest {
@@ -1069,6 +1078,8 @@ func (ec *executionContext) fieldContext_Assignment_tests(ctx context.Context, f
 				return ec.fieldContext_Test_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Test_name(ctx, field)
+			case "assignmentID":
+				return ec.fieldContext_Test_assignmentID(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Test", field.Name)
 		},
@@ -1554,6 +1565,8 @@ func (ec *executionContext) fieldContext_Mutation_createTest(ctx context.Context
 				return ec.fieldContext_Test_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Test_name(ctx, field)
+			case "assignmentID":
+				return ec.fieldContext_Test_assignmentID(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Test", field.Name)
 		},
@@ -2026,6 +2039,8 @@ func (ec *executionContext) fieldContext_Query_tests(ctx context.Context, field 
 				return ec.fieldContext_Test_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Test_name(ctx, field)
+			case "assignmentID":
+				return ec.fieldContext_Test_assignmentID(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Test", field.Name)
 		},
@@ -2073,6 +2088,8 @@ func (ec *executionContext) fieldContext_Query_test(ctx context.Context, field g
 				return ec.fieldContext_Test_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Test_name(ctx, field)
+			case "assignmentID":
+				return ec.fieldContext_Test_assignmentID(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Test", field.Name)
 		},
@@ -2842,6 +2859,50 @@ func (ec *executionContext) _Test_name(ctx context.Context, field graphql.Collec
 }
 
 func (ec *executionContext) fieldContext_Test_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Test",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Test_assignmentID(ctx context.Context, field graphql.CollectedField, obj *model.Test) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Test_assignmentID(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AssignmentID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Test_assignmentID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Test",
 		Field:      field,
@@ -5600,6 +5661,13 @@ func (ec *executionContext) _Test(ctx context.Context, sel ast.SelectionSet, obj
 		case "name":
 
 			out.Values[i] = ec._Test_name(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "assignmentID":
+
+			out.Values[i] = ec._Test_assignmentID(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				invalids++

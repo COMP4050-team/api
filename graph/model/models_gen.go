@@ -56,8 +56,9 @@ type Submission struct {
 }
 
 type Test struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID           string `json:"id"`
+	Name         string `json:"name"`
+	AssignmentID string `json:"assignmentID"`
 }
 
 type Unit struct {

@@ -131,11 +131,15 @@ func TestClassResolver(t *testing.T) {
 		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
 
 		mockDB.EXPECT().GetClass("1").Return(&db.Class{Model: gorm.Model{ID: 1}, Name: "Class 1"}, nil)
+		mockDB.EXPECT().GetAssignmentsForClass("1").Return([]*db.Assignment{{Model: gorm.Model{ID: 1}, Name: "Assignment 1"}}, nil)
 
 		var resp struct {
-			Class struct{ ID, Name string }
+			Class struct {
+				ID, Name    string
+				Assignments []model.Assignment
+			}
 		}
-		c.MustPost(`{ class(id:"1") { id name } }`, &resp)
+		c.MustPost(`{ class(id:"1") { id name assignments { id name } } }`, &resp)
 
 		assert.Equal(t, "1", resp.Class.ID)
 		assert.Equal(t, "Class 1", resp.Class.Name)
@@ -149,11 +153,11 @@ func TestClassResolver(t *testing.T) {
 		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
 
 		mockDB.EXPECT().GetAllClasses().Return([]*db.Class{
-			{Model: gorm.Model{ID: 1}, Name: "Class 1", Assignments: nil, UnitID: 1},
-			{Model: gorm.Model{ID: 2}, Name: "Class 2", Assignments: nil, UnitID: 1},
+			{Model: gorm.Model{ID: 1}, Name: "Class 1", UnitID: 1},
+			{Model: gorm.Model{ID: 2}, Name: "Class 2", UnitID: 1},
 		}, nil)
-		mockDB.EXPECT().GetClass("1").Return(&db.Class{Model: gorm.Model{ID: 1}, Name: "Class 1", UnitID: 1}, nil)
-		mockDB.EXPECT().GetClass("2").Return(&db.Class{Model: gorm.Model{ID: 2}, Name: "Class 2", UnitID: 1}, nil)
+		mockDB.EXPECT().GetAssignmentsForClass("1").Return([]*db.Assignment{{Model: gorm.Model{ID: 1}, Name: "Assignment 1"}}, nil)
+		mockDB.EXPECT().GetAssignmentsForClass("2").Return([]*db.Assignment{{Model: gorm.Model{ID: 2}, Name: "Assignment 2"}}, nil)
 
 		var resp struct {
 			Classes []struct {
@@ -161,14 +165,14 @@ func TestClassResolver(t *testing.T) {
 				Assignments      []model.Assignment
 			}
 		}
-		c.MustPost(`{ classes() { id name assignments { id } unitID } }`, &resp)
+		c.MustPost(`{ classes() { id name assignments { id name } unitID } }`, &resp)
 
 		assert.Equal(t, "1", resp.Classes[0].ID)
 		assert.Equal(t, "2", resp.Classes[1].ID)
 		assert.Equal(t, "Class 1", resp.Classes[0].Name)
 		assert.Equal(t, "Class 2", resp.Classes[1].Name)
-		assert.Equal(t, []model.Assignment([]model.Assignment{}), resp.Classes[0].Assignments)
-		assert.Equal(t, []model.Assignment([]model.Assignment{}), resp.Classes[1].Assignments)
+		assert.Equal(t, []model.Assignment{{ID: "1", Name: "Assignment 1"}}, resp.Classes[0].Assignments)
+		assert.Equal(t, []model.Assignment{{ID: "2", Name: "Assignment 2"}}, resp.Classes[1].Assignments)
 		assert.Equal(t, "1", resp.Classes[0].UnitID)
 		assert.Equal(t, "1", resp.Classes[1].UnitID)
 	})
@@ -245,38 +249,10 @@ func TestAssignmentResolver(t *testing.T) {
 			{Model: gorm.Model{ID: 1}, Name: "Assignment 1", DueDate: dueDate, Tests: nil, Submissions: nil, ClassID: 1},
 			{Model: gorm.Model{ID: 2}, Name: "Assignment 2", DueDate: dueDate, Tests: nil, Submissions: nil, ClassID: 1},
 		}, nil)
-		mockDB.EXPECT().GetAssignment("1").Return(&db.Assignment{
-			Model:       gorm.Model{ID: 1},
-			Name:        "Assignment 1",
-			DueDate:     dueDate,
-			Tests:       []db.Test{},
-			Submissions: []db.Submission{},
-			ClassID:     1,
-		}, nil)
-		mockDB.EXPECT().GetAssignment("1").Return(&db.Assignment{
-			Model:       gorm.Model{ID: 1},
-			Name:        "Assignment 1",
-			DueDate:     dueDate,
-			Tests:       []db.Test{},
-			Submissions: []db.Submission{},
-			ClassID:     1,
-		}, nil)
-		mockDB.EXPECT().GetAssignment("2").Return(&db.Assignment{
-			Model:       gorm.Model{ID: 2},
-			Name:        "Assignment 2",
-			DueDate:     dueDate,
-			Tests:       []db.Test{},
-			Submissions: []db.Submission{},
-			ClassID:     1,
-		}, nil)
-		mockDB.EXPECT().GetAssignment("2").Return(&db.Assignment{
-			Model:       gorm.Model{ID: 2},
-			Name:        "Assignment 2",
-			DueDate:     dueDate,
-			Tests:       []db.Test{},
-			Submissions: []db.Submission{},
-			ClassID:     1,
-		}, nil)
+		mockDB.EXPECT().GetSubmissionsForAssignment("1").Return([]*db.Submission{{Model: gorm.Model{ID: 1}}}, nil)
+		mockDB.EXPECT().GetSubmissionsForAssignment("2").Return([]*db.Submission{{Model: gorm.Model{ID: 2}}}, nil)
+		mockDB.EXPECT().GetTestsForAssignment("1").Return([]*db.Test{{Model: gorm.Model{ID: 1}}}, nil)
+		mockDB.EXPECT().GetTestsForAssignment("2").Return([]*db.Test{{Model: gorm.Model{ID: 2}}}, nil)
 
 		var resp struct {
 			Assignments []struct {
@@ -295,10 +271,10 @@ func TestAssignmentResolver(t *testing.T) {
 		assert.Equal(t, "Assignment 2", resp.Assignments[1].Name)
 		assert.Equal(t, dueDateString, resp.Assignments[0].DueDate)
 		assert.Equal(t, dueDateString, resp.Assignments[1].DueDate)
-		assert.Equal(t, []model.Test{}, resp.Assignments[0].Tests)
-		assert.Equal(t, []model.Test{}, resp.Assignments[1].Tests)
-		assert.Equal(t, []model.Submission{}, resp.Assignments[0].Submissions)
-		assert.Equal(t, []model.Submission{}, resp.Assignments[1].Submissions)
+		assert.Equal(t, []model.Test{{ID: "1"}}, resp.Assignments[0].Tests)
+		assert.Equal(t, []model.Test{{ID: "2"}}, resp.Assignments[1].Tests)
+		assert.Equal(t, []model.Submission{{ID: "1"}}, resp.Assignments[0].Submissions)
+		assert.Equal(t, []model.Submission{{ID: "2"}}, resp.Assignments[1].Submissions)
 	})
 
 	t.Run("Get Assignment Not Found", func(t *testing.T) {
@@ -357,6 +333,33 @@ func TestTestResolver(t *testing.T) {
 
 		assert.Equal(t, "1", resp.Test.ID)
 		assert.Equal(t, "Test 1", resp.Test.Name)
+	})
+
+	t.Run("Get All Tests", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+
+		mockDB.EXPECT().GetAllTests().Return([]*db.Test{
+			{Model: gorm.Model{ID: 1}, Name: "Test 1", AssignmentID: 1},
+			{Model: gorm.Model{ID: 1}, Name: "Test 2", AssignmentID: 1},
+		}, nil)
+
+		var resp struct {
+			Tests []struct {
+				ID, Name, AssignmentID string
+			}
+		}
+		c.MustPost(`{ tests() { id name assignmentID } }`, &resp)
+
+		assert.Equal(t, "1", resp.Tests[0].ID)
+		assert.Equal(t, "1", resp.Tests[1].ID)
+		assert.Equal(t, "Test 1", resp.Tests[0].Name)
+		assert.Equal(t, "Test 2", resp.Tests[1].Name)
+		assert.Equal(t, "1", resp.Tests[0].AssignmentID)
+		assert.Equal(t, "1", resp.Tests[1].AssignmentID)
 	})
 
 	t.Run("Get Test Not Found", func(t *testing.T) {

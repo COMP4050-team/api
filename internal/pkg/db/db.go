@@ -18,14 +18,17 @@ type Database interface {
 	CreateAssignment(name string, classID uint) (*Assignment, error)
 	GetAllAssignments() ([]*Assignment, error)
 	GetAssignment(id string) (*Assignment, error)
+	GetAssignmentsForClass(classID string) ([]*Assignment, error)
 
 	CreateTest(name string, assignmentID uint) (*Test, error)
 	GetAllTests() ([]*Test, error)
 	GetTest(id string) (*Test, error)
+	GetTestsForAssignment(assignmentID string) ([]*Test, error)
 
 	CreateSubmission(studentID string, assignmentID uint) (*Submission, error)
 	GetAllSubmissions() ([]*Submission, error)
 	GetSubmission(id string) (*Submission, error)
+	GetSubmissionsForAssignment(assignmentID string) ([]*Submission, error)
 
 	CreateResult(score float64, submissionID uint) (*Result, error)
 	GetAllResults() ([]*Result, error)
@@ -205,6 +208,16 @@ func (db *database) GetAssignment(id string) (*Assignment, error) {
 	return &assignment, nil
 }
 
+func (db *database) GetAssignmentsForClass(classID string) ([]*Assignment, error) {
+	var assignments []*Assignment
+	tx := db.client.Find(&assignments).Where("class_id = ?", classID)
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	return assignments, nil
+}
+
 func (db *database) CreateTest(name string, assignmentID uint) (*Test, error) {
 	test := Test{Name: name, AssignmentID: assignmentID}
 	tx := db.client.Create(&test)
@@ -235,6 +248,16 @@ func (db *database) GetTest(id string) (*Test, error) {
 	return &test, nil
 }
 
+func (db *database) GetTestsForAssignment(assignmentID string) ([]*Test, error) {
+	var tests []*Test
+	tx := db.client.Find(&tests).Where("assignment_id = ?", assignmentID)
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	return tests, nil
+}
+
 func (db *database) CreateSubmission(studentID string, assignmentID uint) (*Submission, error) {
 	submission := Submission{StudentID: studentID, AssignmentID: assignmentID}
 	tx := db.client.Create(&submission)
@@ -263,6 +286,16 @@ func (db *database) GetSubmission(id string) (*Submission, error) {
 	}
 
 	return &submission, nil
+}
+
+func (db *database) GetSubmissionsForAssignment(assignmentID string) ([]*Submission, error) {
+	var submissions []*Submission
+	tx := db.client.Find(&submissions).Where("assignment_id = ?", assignmentID)
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	return submissions, nil
 }
 
 func (db *database) CreateResult(score float64, submissionID uint) (*Result, error) {
