@@ -118,6 +118,43 @@ func TestUnitResolver(t *testing.T) {
 		assert.Equal(t, "1", resp.CreateUnit.ID)
 		assert.Equal(t, "COMP1000", resp.CreateUnit.Name)
 	})
+
+	t.Run("Create Unit - Already Exists", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+
+		mockDB.EXPECT().GetUnitByName("COMP1000").Return(&db.Unit{Model: gorm.Model{ID: 1}, Name: "COMP1000"}, nil)
+
+		var resp struct {
+			CreateUnit struct{ ID, Name string }
+		}
+		err := c.Post(`mutation { createUnit(input: {name: "COMP1000"}) { id name } }`, &resp)
+
+		assert.ErrorContains(t, err, "unit already exists")
+		assert.NotEqual(t, "1", resp.CreateUnit.ID)
+	})
+
+	t.Run("Create Unit - Error", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+
+		mockDB.EXPECT().GetUnitByName("COMP1000").Return(&db.Unit{Model: gorm.Model{ID: 1}, Name: "COMP1000"}, fmt.Errorf("error"))
+		// mockDB.EXPECT().CreateUnit("COMP1000").Return(&db.Unit{Model: gorm.Model{ID: 1}, Name: "COMP1000"}, nil)
+
+		var resp struct {
+			CreateUnit struct{ ID, Name string }
+		}
+		err := c.Post(`mutation { createUnit(input: {name: "COMP1000"}) { id name } }`, &resp)
+
+		assert.ErrorContains(t, err, "error getting unit: error")
+		assert.NotEqual(t, "1", resp.CreateUnit.ID)
+	})
 }
 
 func TestClassResolver(t *testing.T) {
@@ -546,24 +583,6 @@ func TestResultResolver(t *testing.T) {
 			{Model: gorm.Model{ID: 1, CreatedAt: now}, Score: 99, SubmissionID: 1},
 			{Model: gorm.Model{ID: 2, CreatedAt: now}, Score: 51, SubmissionID: 2},
 		}, nil)
-		// mockDB.EXPECT().GetSubmission("1").Return(
-		// 	&db.Submission{
-		// 		Model:     gorm.Model{ID: 1},
-		// 		StudentID: "44444444",
-		// 		Result: db.Result{
-		// 			Model: gorm.Model{ID: 1},
-		// 			Score: 99,
-		// 		},
-		// 		AssignmentID: 1}, nil)
-		// mockDB.EXPECT().GetSubmission("2").Return(
-		// 	&db.Submission{
-		// 		Model:     gorm.Model{ID: 2},
-		// 		StudentID: "44444445",
-		// 		Result: db.Result{
-		// 			Model: gorm.Model{ID: 2},
-		// 			Score: 51,
-		// 		},
-		// 		AssignmentID: 1}, nil)
 
 		var resp struct {
 			Results []struct {
