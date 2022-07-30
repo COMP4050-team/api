@@ -33,9 +33,10 @@ jobs:
     - name: gcov2lcov-action
       uses: jandelgado/gcov2lcov-action@v1.0.9
       
-    - name: Coveralls GitHub Action
-      uses: coverallsapp/github-action@1.1.3
-
+    - name: Coveralls
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
       
   deploy:
       name: Deploy app
