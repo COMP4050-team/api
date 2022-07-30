@@ -1,12 +1,5 @@
-# Comp4050 ProjectStarter
+# API
 
-This is the group repository for COMP4050.
+[![Test and Deploy API to dev](https://github.com/COMP4050-team/api/actions/workflows/deploy.yml/badge.svg)](https://github.com/COMP4050-team/api/actions/workflows/deploy.yml)
 
-You can use this throughout your project. 
-However, if you prefer to use a different repo or a different service like GitLab or Bitbucket, document here how the lecturers can find it.
-
-Please replace this README with an approiate README.
-
-Good luck
-
-Ansgar
+[![Coverage Status](https://coveralls.io/repos/github/COMP4050-team/api/badge.svg?branch=main&t=Olikwl)](https://coveralls.io/github/COMP4050-team/api?branch=main)
