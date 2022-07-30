@@ -1,4 +1,4 @@
-name: Test and Deploy API to dev
+name: Test
 
 on:
   push:
@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [ main ]
     
-env:
-  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-
 jobs:
 
   build-test:
@@ -36,15 +33,3 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         path-to-lcov: ./coverage.lcov
       
-  deploy:
-      name: Deploy app
-      needs: build-test
-      environment: 
-        name: dev
-        url: https://comp4050-square-api.fly.dev
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v2
-        - uses: superfly/flyctl-actions/setup-flyctl@master
-        - run: flyctl deploy --remote-only
-        
