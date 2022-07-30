@@ -16,17 +16,77 @@ import (
 
 // Tests is the resolver for the tests field.
 func (r *assignmentResolver) Tests(ctx context.Context, obj *model.Assignment) ([]*model.Test, error) {
-	panic(fmt.Errorf("not implemented"))
+	assignment, err := r.DB.GetAssignment(obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	if assignment == nil {
+		return nil, nil
+	}
+
+	var gqlTests []*model.Test
+
+	for i, test := range assignment.Tests {
+		gqlTests = append(gqlTests, &model.Test{
+			ID:   fmt.Sprintf("%d", i),
+			Name: test.Name,
+		})
+	}
+
+	return gqlTests, nil
 }
 
 // Submissions is the resolver for the submissions field.
 func (r *assignmentResolver) Submissions(ctx context.Context, obj *model.Assignment) ([]*model.Submission, error) {
-	panic(fmt.Errorf("not implemented"))
+	assignment, err := r.DB.GetAssignment(obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	if assignment == nil {
+		return nil, nil
+	}
+
+	var gqlSubmissions []*model.Submission
+
+	for i, submission := range assignment.Submissions {
+		gqlSubmissions = append(gqlSubmissions, &model.Submission{
+			ID:        fmt.Sprintf("%d", i),
+			StudentID: submission.StudentID,
+			Result: &model.Result{
+				ID:           fmt.Sprintf("%d", submission.Result.ID),
+				Score:        submission.Result.Score,
+				Date:         submission.Result.CreatedAt.Format("02/01/2006"),
+				SubmissionID: fmt.Sprintf("%d", submission.Result.SubmissionID),
+			},
+		})
+	}
+
+	return gqlSubmissions, nil
 }
 
 // Assignments is the resolver for the assignments field.
 func (r *classResolver) Assignments(ctx context.Context, obj *model.Class) ([]*model.Assignment, error) {
-	panic(fmt.Errorf("not implemented"))
+	class, err := r.DB.GetClass(obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	if class == nil {
+		return nil, nil
+	}
+
+	var gqlAssignments []*model.Assignment
+
+	for _, assignment := range class.Assignments {
+		gqlAssignments = append(gqlAssignments, &model.Assignment{
+			ID:          fmt.Sprintf("%d", assignment.ID),
+			Name:        assignment.Name,
+			DueDate:     assignment.DueDate.Format("02/01/2006"),
+			Tests:       []*model.Test{},
+			Submissions: []*model.Submission{},
+		})
+	}
+
+	return gqlAssignments, nil
 }
 
 // CreateUnit is the resolver for the createUnit field.
@@ -187,7 +247,7 @@ func (r *queryResolver) Classes(ctx context.Context) ([]*model.Class, error) {
 
 	gqlClasses := []*model.Class{}
 	for _, class := range classes {
-		gqlClass := &model.Class{ID: fmt.Sprintf("%d", class.ID), Name: class.Name}
+		gqlClass := &model.Class{ID: fmt.Sprintf("%d", class.ID), Name: class.Name, UnitID: fmt.Sprintf("%d", class.UnitID)}
 		gqlClasses = append(gqlClasses, gqlClass)
 	}
 
@@ -219,8 +279,13 @@ func (r *queryResolver) Assignments(ctx context.Context) ([]*model.Assignment, e
 
 	gqlAssignments := []*model.Assignment{}
 	for _, assignment := range assignments {
-		gqlAssignment := &model.Assignment{ID: fmt.Sprintf("%d", assignment.ID), Name: assignment.Name}
-		gqlAssignments = append(gqlAssignments, gqlAssignment)
+		gqlAssignments = append(gqlAssignments, &model.Assignment{
+			ID:          fmt.Sprintf("%d", assignment.ID),
+			Name:        assignment.Name,
+			DueDate:     assignment.DueDate.Format("02/01/2006"),
+			Tests:       []*model.Test{},
+			Submissions: []*model.Submission{},
+		})
 	}
 
 	return gqlAssignments, nil
@@ -315,7 +380,12 @@ func (r *queryResolver) Results(ctx context.Context) ([]*model.Result, error) {
 
 	gqlResults := []*model.Result{}
 	for _, result := range results {
-		gqlResult := &model.Result{ID: fmt.Sprintf("%d", result.ID), Score: result.Score}
+		gqlResult := &model.Result{
+			ID:           fmt.Sprintf("%d", result.ID),
+			Score:        result.Score,
+			Date:         result.CreatedAt.Format("02/01/2006"),
+			SubmissionID: fmt.Sprintf("%d", result.SubmissionID),
+		}
 		gqlResults = append(gqlResults, gqlResult)
 	}
 
@@ -332,12 +402,20 @@ func (r *queryResolver) Result(ctx context.Context, id string) (*model.Result, e
 		return nil, nil
 	}
 
-	return &model.Result{ID: id, Score: result.Score}, nil
+	return &model.Result{ID: fmt.Sprintf("%d", result.ID), Score: result.Score, SubmissionID: fmt.Sprintf("%d", result.SubmissionID), Date: result.CreatedAt.Format("02/01/2006")}, nil
 }
 
 // Result is the resolver for the result field.
 func (r *submissionResolver) Result(ctx context.Context, obj *model.Submission) (*model.Result, error) {
-	panic(fmt.Errorf("not implemented"))
+	submission, err := r.DB.GetSubmission(obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	if submission == nil {
+		return nil, nil
+	}
+
+	return &model.Result{ID: fmt.Sprintf("%d", submission.Result.ID), Score: submission.Result.Score}, nil
 }
 
 // Classes is the resolver for the classes field.
@@ -352,8 +430,8 @@ func (r *unitResolver) Classes(ctx context.Context, obj *model.Unit) ([]*model.C
 
 	var gqlClasses []*model.Class
 
-	for i, class := range unit.Classes {
-		gqlClasses = append(gqlClasses, &model.Class{ID: fmt.Sprintf("%d", i), Name: class.Name})
+	for _, class := range unit.Classes {
+		gqlClasses = append(gqlClasses, &model.Class{ID: fmt.Sprintf("%d", class.ID), Name: class.Name, UnitID: fmt.Sprintf("%d", class.UnitID)})
 	}
 
 	return gqlClasses, nil

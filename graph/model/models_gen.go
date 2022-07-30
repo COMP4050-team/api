@@ -13,6 +13,7 @@ type Assignment struct {
 type Class struct {
 	ID          string        `json:"id"`
 	Name        string        `json:"name"`
+	UnitID      string        `json:"unitID"`
 	Assignments []*Assignment `json:"assignments"`
 }
 
