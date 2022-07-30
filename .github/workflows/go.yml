@@ -27,14 +27,14 @@ jobs:
     - name: Test
       run: go test -v -covermode=count -coverprofile=coverage.out ./...
       
-    - name: gcov2lcov-action
+    - name: Generate lcov file
       uses: jandelgado/gcov2lcov-action@v1.0.9
       
-    - name: Coveralls
+    - name: Coveralls - Test coverage
       uses: coverallsapp/github-action@master
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: ./lconv.info
+        path-to-lcov: ./coverage.lcov
       
   deploy:
       name: Deploy app
