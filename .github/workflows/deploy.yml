@@ -1,11 +1,14 @@
 name: Test and Deploy API to dev
+
+on: workflow_dispatch
     
 env:
   FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
 jobs:
 
-  Build and Test:
+  build-and-test:
+    name: Build and Test
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -32,7 +35,7 @@ jobs:
       
   deploy:
       name: Deploy App
-      needs: Build and Test
+      needs: build-and-test
       environment: 
         name: dev
         url: https://comp4050-square-api.fly.dev
