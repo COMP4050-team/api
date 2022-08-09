@@ -4,6 +4,7 @@ definitions:
   steps:
     - step: &build-test
         name: Build and test
+        image: golang:1.19
         script:
           - go build -v ./...
           - go test -v -covermode=count -coverprofile=coverage.out ./...
