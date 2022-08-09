@@ -8,3 +8,6 @@ test:
 
 coverage:
 	go tool cover -html=cover.out
+
+run:
+	go run ./...
