@@ -8,8 +8,12 @@ definitions:
         script:
           - go build -v ./...
           - go test -v -covermode=count -coverprofile=coverage.out ./...
-        artifacts:
-          - target/**
+    - step: &deploy
+        name: Deploy
+        deployment: Production
+        script:
+          - curl -L https://fly.io/install.sh | sh
+          - fly -deploy --remote-only
 
 pipelines:
   default:
