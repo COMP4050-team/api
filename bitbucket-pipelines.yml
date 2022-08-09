@@ -11,9 +11,10 @@ definitions:
     - step: &deploy
         name: Deploy
         deployment: Production
+        trigger: manual
         script:
           - curl -L https://fly.io/install.sh | sh
-          - fly deploy --remote-only
+          - /root/.fly/bin/flyctl deploy --remote-only
 
 pipelines:
   default:
