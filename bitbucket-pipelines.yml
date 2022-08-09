@@ -11,13 +11,14 @@ definitions:
     - step: &deploy
         name: Deploy
         deployment: Production
-        trigger: manual
+        # trigger: manual
         script:
-          - curl -L https://fly.io/install.sh | sh
-          - /root/.fly/bin/flyctl deploy -t $FLY_API_TOKEN --remote-only
+          - curl -L https://fly.io/install.sh | FLYCTL_INSTALL=/usr/local sh
+          - flyctl deploy --remote-only
 
 pipelines:
   default:
-    - parallel:
-      - step: *build-test
-      - step: *deploy  
+    # - parallel:
+    #   - step: *build-test
+    #   - step: *deploy  
+    - step: *deploy  
