@@ -1,0 +1,16 @@
+image: atlassian/default-image:3
+
+definitions: 
+  steps:
+    - step: &build-test
+        name: Build and test
+        script:
+          - go build -v ./...
+          - go test -v -covermode=count -coverprofile=coverage.out ./...
+        artifacts:
+          - target/**
+
+pipelines:
+  default:
+    - parallel:
+      - step: *build-test
