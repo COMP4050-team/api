@@ -14,7 +14,7 @@ definitions:
         trigger: manual
         script:
           - curl -L https://fly.io/install.sh | sh
-          - /root/.fly/bin/flyctl deploy --remote-only
+          - /root/.fly/bin/flyctl -t $FLY_API_TOKEN deploy --remote-only
 
 pipelines:
   default:
