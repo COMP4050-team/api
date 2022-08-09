@@ -13,9 +13,9 @@ definitions:
         deployment: Production
         script:
           - curl -L https://fly.io/install.sh | sh
-          - fly -deploy --remote-only
+          - fly deploy --remote-only
 
 pipelines:
   default:
-    - parallel:
-      - step: *build-test
+    - step: *build-test
+    - step: *deploy  
