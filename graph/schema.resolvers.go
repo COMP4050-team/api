@@ -7,14 +7,90 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/COMP4050/square-team-5/api/graph/generated"
 	"github.com/COMP4050/square-team-5/api/graph/model"
 	"github.com/COMP4050/square-team-5/api/internal/pkg/db"
+	"github.com/COMP4050/square-team-5/api/internal/pkg/db/models"
+	"github.com/golang-jwt/jwt"
 )
 
 // Tests is the resolver for the tests field.
+func (r *assignmentResolver) Tests(ctx context.Context, obj *model.Assignment) ([]*model.Test, error) {
+	tests, err := r.DB.GetTestsForAssignment(obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	if tests == nil {
+		return nil, nil
+	}
+
+	var gqlTests []*model.Test
+
+	for _, test := range tests {
+		gqlTests = append(gqlTests, &model.Test{
+			ID:   fmt.Sprintf("%d", test.ID),
+			Name: test.Name,
+		})
+	}
+
+	return gqlTests, nil
+}
+
+// Submissions is the resolver for the submissions field.
+func (r *assignmentResolver) Submissions(ctx context.Context, obj *model.Assignment) ([]*model.Submission, error) {
+	submissions, err := r.DB.GetSubmissionsForAssignment(obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	if submissions == nil {
+		return nil, nil
+	}
+
+	var gqlSubmissions []*model.Submission
+
+	for _, submission := range submissions {
+		gqlSubmissions = append(gqlSubmissions, &model.Submission{
+			ID:        fmt.Sprintf("%d", submission.ID),
+			StudentID: submission.StudentID,
+			Result: &model.Result{
+				ID:           fmt.Sprintf("%d", submission.Result.ID),
+				Score:        submission.Result.Score,
+				Date:         submission.Result.CreatedAt.Format("02/01/2006"),
+				SubmissionID: fmt.Sprintf("%d", submission.Result.SubmissionID),
+			},
+		})
+	}
+
+	return gqlSubmissions, nil
+}
+
+// Assignments is the resolver for the assignments field.
+func (r *classResolver) Assignments(ctx context.Context, obj *model.Class) ([]*model.Assignment, error) {
+	assignments, err := r.DB.GetAssignmentsForClass(obj.ID)
+	if err != nil {
+		return nil, err
+	}
+	if assignments == nil {
+		return nil, nil
+	}
+
+	var gqlAssignments []*model.Assignment
+
+	for _, assignment := range assignments {
+		gqlAssignments = append(gqlAssignments, &model.Assignment{
+			ID:          fmt.Sprintf("%d", assignment.ID),
+			Name:        assignment.Name,
+			DueDate:     assignment.DueDate.Format("02/01/2006"),
+			Tests:       []*model.Test{},
+			Submissions: []*model.Submission{},
+		})
+	}
+
+	return gqlAssignments, nil
+}
 
 // CreateUnit is the resolver for the createUnit field.
 func (r *mutationResolver) CreateUnit(ctx context.Context, input model.NewUnit) (*model.Unit, error) {
@@ -128,6 +204,68 @@ func (r *mutationResolver) CreateSubmission(ctx context.Context, input model.New
 	gqlSubmission := &model.Submission{ID: fmt.Sprintf("%d", submission.ID), StudentID: submission.StudentID}
 
 	return gqlSubmission, nil
+}
+
+// Register is the resolver for the register field.
+func (r *mutationResolver) Register(ctx context.Context, email string, password string) (string, error) {
+	user, err := r.DB.GetUserByEmail(email)
+	if err != nil && !errors.Is(err, db.ErrRecordNotFound) {
+		return "", fmt.Errorf("error getting user: %w", err)
+	}
+	if user != nil {
+		return "", fmt.Errorf("user already exists")
+	}
+
+	passwordHash, err := models.HashPassword(password)
+	if err != nil {
+		return "", fmt.Errorf("error hashing password: %w", err)
+	}
+
+	user, err = r.DB.CreateUser(email, passwordHash, models.UserRoleAdmin)
+	if err != nil {
+		return "", fmt.Errorf("error creating user: %w", err)
+	}
+	if user == nil {
+		return "", fmt.Errorf("error creating user")
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"sub": user.Email,
+	})
+
+	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	if err != nil {
+		return "", fmt.Errorf("error signing token: %w", err)
+	}
+
+	return tokenString, nil
+}
+
+// Login is the resolver for the login field.
+func (r *mutationResolver) Login(ctx context.Context, email string, password string) (string, error) {
+	user, err := r.DB.GetUserByEmail(email)
+	if err != nil {
+		return "", fmt.Errorf("error getting user: %w", err)
+	}
+	if user == nil {
+		return "", fmt.Errorf("user with email: %s does not exist", email)
+	}
+
+	err = user.CheckPassword(password)
+	if err != nil {
+		return "", fmt.Errorf("incorrect username or password: %w", err)
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"sub": user.Email,
+	})
+
+	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	if err != nil {
+		return "", fmt.Errorf("error signing token: %w", err)
+	}
+
+	return tokenString, nil
 }
 
 // Units is the resolver for the units field.
@@ -332,80 +470,6 @@ func (r *queryResolver) Result(ctx context.Context, id string) (*model.Result, e
 	}
 
 	return &model.Result{ID: fmt.Sprintf("%d", result.ID), Score: result.Score, SubmissionID: fmt.Sprintf("%d", result.SubmissionID), Date: result.CreatedAt.Format("02/01/2006")}, nil
-}
-
-func (r *assignmentResolver) Tests(ctx context.Context, obj *model.Assignment) ([]*model.Test, error) {
-	tests, err := r.DB.GetTestsForAssignment(obj.ID)
-	if err != nil {
-		return nil, err
-	}
-	if tests == nil {
-		return nil, nil
-	}
-
-	var gqlTests []*model.Test
-
-	for _, test := range tests {
-		gqlTests = append(gqlTests, &model.Test{
-			ID:   fmt.Sprintf("%d", test.ID),
-			Name: test.Name,
-		})
-	}
-
-	return gqlTests, nil
-}
-
-// Submissions is the resolver for the submissions field.
-func (r *assignmentResolver) Submissions(ctx context.Context, obj *model.Assignment) ([]*model.Submission, error) {
-	submissions, err := r.DB.GetSubmissionsForAssignment(obj.ID)
-	if err != nil {
-		return nil, err
-	}
-	if submissions == nil {
-		return nil, nil
-	}
-
-	var gqlSubmissions []*model.Submission
-
-	for _, submission := range submissions {
-		gqlSubmissions = append(gqlSubmissions, &model.Submission{
-			ID:        fmt.Sprintf("%d", submission.ID),
-			StudentID: submission.StudentID,
-			Result: &model.Result{
-				ID:           fmt.Sprintf("%d", submission.Result.ID),
-				Score:        submission.Result.Score,
-				Date:         submission.Result.CreatedAt.Format("02/01/2006"),
-				SubmissionID: fmt.Sprintf("%d", submission.Result.SubmissionID),
-			},
-		})
-	}
-
-	return gqlSubmissions, nil
-}
-
-// Assignments is the resolver for the assignments field.
-func (r *classResolver) Assignments(ctx context.Context, obj *model.Class) ([]*model.Assignment, error) {
-	assignments, err := r.DB.GetAssignmentsForClass(obj.ID)
-	if err != nil {
-		return nil, err
-	}
-	if assignments == nil {
-		return nil, nil
-	}
-
-	var gqlAssignments []*model.Assignment
-
-	for _, assignment := range assignments {
-		gqlAssignments = append(gqlAssignments, &model.Assignment{
-			ID:          fmt.Sprintf("%d", assignment.ID),
-			Name:        assignment.Name,
-			DueDate:     assignment.DueDate.Format("02/01/2006"),
-			Tests:       []*model.Test{},
-			Submissions: []*model.Submission{},
-		})
-	}
-
-	return gqlAssignments, nil
 }
 
 // Result is the resolver for the result field.

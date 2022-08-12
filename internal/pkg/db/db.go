@@ -3,36 +3,41 @@ package db
 import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+
+	"github.com/COMP4050/square-team-5/api/internal/pkg/db/models"
 )
 
 type Database interface {
-	CreateUnit(name string) (*Unit, error)
-	GetAllUnits() ([]*Unit, error)
-	GetUnitByID(id string, fetchClasses bool) (*Unit, error)
-	GetUnitByName(name string) (*Unit, error)
+	CreateUser(email, passwordHash string, role models.UserRole) (*models.User, error)
+	GetUserByEmail(email string) (*models.User, error)
 
-	CreateClass(name string, unitID uint) (*Class, error)
-	GetAllClasses() ([]*Class, error)
-	GetClass(id string) (*Class, error)
+	CreateUnit(name string) (*models.Unit, error)
+	GetAllUnits() ([]*models.Unit, error)
+	GetUnitByID(id string, fetchClasses bool) (*models.Unit, error)
+	GetUnitByName(name string) (*models.Unit, error)
 
-	CreateAssignment(name string, classID uint) (*Assignment, error)
-	GetAllAssignments() ([]*Assignment, error)
-	GetAssignment(id string) (*Assignment, error)
-	GetAssignmentsForClass(classID string) ([]*Assignment, error)
+	CreateClass(name string, unitID uint) (*models.Class, error)
+	GetAllClasses() ([]*models.Class, error)
+	GetClass(id string) (*models.Class, error)
 
-	CreateTest(name string, assignmentID uint) (*Test, error)
-	GetAllTests() ([]*Test, error)
-	GetTest(id string) (*Test, error)
-	GetTestsForAssignment(assignmentID string) ([]*Test, error)
+	CreateAssignment(name string, classID uint) (*models.Assignment, error)
+	GetAllAssignments() ([]*models.Assignment, error)
+	GetAssignment(id string) (*models.Assignment, error)
+	GetAssignmentsForClass(classID string) ([]*models.Assignment, error)
 
-	CreateSubmission(studentID string, assignmentID uint) (*Submission, error)
-	GetAllSubmissions() ([]*Submission, error)
-	GetSubmission(id string) (*Submission, error)
-	GetSubmissionsForAssignment(assignmentID string) ([]*Submission, error)
+	CreateTest(name string, assignmentID uint) (*models.Test, error)
+	GetAllTests() ([]*models.Test, error)
+	GetTest(id string) (*models.Test, error)
+	GetTestsForAssignment(assignmentID string) ([]*models.Test, error)
 
-	CreateResult(score float64, submissionID uint) (*Result, error)
-	GetAllResults() ([]*Result, error)
-	GetResult(id string) (*Result, error)
+	CreateSubmission(studentID string, assignmentID uint) (*models.Submission, error)
+	GetAllSubmissions() ([]*models.Submission, error)
+	GetSubmission(id string) (*models.Submission, error)
+	GetSubmissionsForAssignment(assignmentID string) ([]*models.Submission, error)
+
+	CreateResult(score float64, submissionID uint) (*models.Result, error)
+	GetAllResults() ([]*models.Result, error)
+	GetResult(id string) (*models.Result, error)
 }
 
 type database struct {
@@ -49,58 +54,43 @@ func NewDB() Database {
 
 	// Migrate the schema
 	err = db.AutoMigrate(
-		&Unit{},
-		&Class{},
-		&Assignment{},
-		&Test{},
-		&Submission{},
+		&models.Unit{},
+		&models.Class{},
+		&models.Assignment{},
+		&models.Test{},
+		&models.Submission{},
+		&models.User{},
 	)
 	if err != nil {
 		panic("failed to migrate database")
 	}
 
 	return &database{client: db}
-
-	// // Create
-	// test := models.Test{Name: "Tests 1"}
-	// db.Create(&test)
-
-	// assignment := models.Assignment{
-	// 	Name:    "Assignment 1",
-	// 	DueDate: time.Now().Add(time.Hour * 24 * 7),
-	// 	Tests:   []models.Test{test},
-	// }
-	// db.Create(&assignment)
-
-	// class := models.Class{
-	// 	Name:        "Tutorial 1",
-	// 	Assignments: []models.Assignment{assignment},
-	// }
-	// db.Create(&class)
-
-	// db.Create(&models.Unit{
-	// 	Name:    "COMP1000",
-	// 	Classes: []models.Class{class},
-	// })
-
-	// // Read
-	// var unit models.Unit
-	// db.Preload("Classes").First(&unit)
-
-	// fmt.Printf("%+v", unit)
-
-	// // Update - update product's price to 200
-	// db.Model(&product).Update("Price", 200)
-	// // Update - update multiple fields
-	// db.Model(&product).Updates(models.Unit{Price: 200, Code: "F42"}) // non-zero fields
-	// db.Model(&product).Updates(map[string]interface{}{"Price": 200, "Code": "F42"})
-
-	// // Delete - delete product
-	// db.Delete(&product, 1)
 }
 
-func (db *database) CreateUnit(name string) (*Unit, error) {
-	unit := Unit{Name: name}
+func (db *database) CreateUser(email, passwordHash string, role models.UserRole) (*models.User, error) {
+	user := models.User{Email: email, PasswordHash: passwordHash, Role: role}
+	tx := db.client.Create(&user)
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	return &user, nil
+}
+
+func (db *database) GetUserByEmail(email string) (*models.User, error) {
+	var user models.User
+
+	tx := db.client.Where("email = ?", email).First(&user)
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	return &user, nil
+}
+
+func (db *database) CreateUnit(name string) (*models.Unit, error) {
+	unit := models.Unit{Name: name}
 	tx := db.client.Create(&unit)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -109,8 +99,8 @@ func (db *database) CreateUnit(name string) (*Unit, error) {
 	return &unit, nil
 }
 
-func (db *database) GetAllUnits() ([]*Unit, error) {
-	var units []*Unit
+func (db *database) GetAllUnits() ([]*models.Unit, error) {
+	var units []*models.Unit
 	tx := db.client.Find(&units)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -119,8 +109,8 @@ func (db *database) GetAllUnits() ([]*Unit, error) {
 	return units, nil
 }
 
-func (db *database) GetUnitByID(id string, fetchClasses bool) (*Unit, error) {
-	var unit Unit
+func (db *database) GetUnitByID(id string, fetchClasses bool) (*models.Unit, error) {
+	var unit models.Unit
 
 	if fetchClasses {
 		tx := db.client.Preload("Classes").First(&unit, id)
@@ -137,8 +127,8 @@ func (db *database) GetUnitByID(id string, fetchClasses bool) (*Unit, error) {
 	return &unit, nil
 }
 
-func (db *database) GetUnitByName(name string) (*Unit, error) {
-	var unit Unit
+func (db *database) GetUnitByName(name string) (*models.Unit, error) {
+	var unit models.Unit
 
 	tx := db.client.Where("name = ?", name).First(&unit)
 	if tx.Error != nil {
@@ -148,8 +138,8 @@ func (db *database) GetUnitByName(name string) (*Unit, error) {
 	return &unit, nil
 }
 
-func (db *database) CreateClass(name string, unitID uint) (*Class, error) {
-	class := Class{Name: name, UnitID: unitID}
+func (db *database) CreateClass(name string, unitID uint) (*models.Class, error) {
+	class := models.Class{Name: name, UnitID: unitID}
 	tx := db.client.Create(&class)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -158,8 +148,8 @@ func (db *database) CreateClass(name string, unitID uint) (*Class, error) {
 	return &class, nil
 }
 
-func (db *database) GetAllClasses() ([]*Class, error) {
-	var classes []*Class
+func (db *database) GetAllClasses() ([]*models.Class, error) {
+	var classes []*models.Class
 	tx := db.client.Find(&classes)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -168,8 +158,8 @@ func (db *database) GetAllClasses() ([]*Class, error) {
 	return classes, nil
 }
 
-func (db *database) GetClass(id string) (*Class, error) {
-	var class Class
+func (db *database) GetClass(id string) (*models.Class, error) {
+	var class models.Class
 	tx := db.client.First(&class, id)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -178,8 +168,8 @@ func (db *database) GetClass(id string) (*Class, error) {
 	return &class, nil
 }
 
-func (db *database) CreateAssignment(name string, classID uint) (*Assignment, error) {
-	assignment := Assignment{Name: name, ClassID: classID}
+func (db *database) CreateAssignment(name string, classID uint) (*models.Assignment, error) {
+	assignment := models.Assignment{Name: name, ClassID: classID}
 	tx := db.client.Create(&assignment)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -188,8 +178,8 @@ func (db *database) CreateAssignment(name string, classID uint) (*Assignment, er
 	return &assignment, nil
 }
 
-func (db *database) GetAllAssignments() ([]*Assignment, error) {
-	var assignments []*Assignment
+func (db *database) GetAllAssignments() ([]*models.Assignment, error) {
+	var assignments []*models.Assignment
 	tx := db.client.Find(&assignments)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -198,8 +188,8 @@ func (db *database) GetAllAssignments() ([]*Assignment, error) {
 	return assignments, nil
 }
 
-func (db *database) GetAssignment(id string) (*Assignment, error) {
-	var assignment Assignment
+func (db *database) GetAssignment(id string) (*models.Assignment, error) {
+	var assignment models.Assignment
 	tx := db.client.First(&assignment, id)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -208,8 +198,8 @@ func (db *database) GetAssignment(id string) (*Assignment, error) {
 	return &assignment, nil
 }
 
-func (db *database) GetAssignmentsForClass(classID string) ([]*Assignment, error) {
-	var assignments []*Assignment
+func (db *database) GetAssignmentsForClass(classID string) ([]*models.Assignment, error) {
+	var assignments []*models.Assignment
 	tx := db.client.Find(&assignments).Where("class_id = ?", classID)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -218,8 +208,8 @@ func (db *database) GetAssignmentsForClass(classID string) ([]*Assignment, error
 	return assignments, nil
 }
 
-func (db *database) CreateTest(name string, assignmentID uint) (*Test, error) {
-	test := Test{Name: name, AssignmentID: assignmentID}
+func (db *database) CreateTest(name string, assignmentID uint) (*models.Test, error) {
+	test := models.Test{Name: name, AssignmentID: assignmentID}
 	tx := db.client.Create(&test)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -228,8 +218,8 @@ func (db *database) CreateTest(name string, assignmentID uint) (*Test, error) {
 	return &test, nil
 }
 
-func (db *database) GetAllTests() ([]*Test, error) {
-	var tests []*Test
+func (db *database) GetAllTests() ([]*models.Test, error) {
+	var tests []*models.Test
 	tx := db.client.Find(&tests)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -238,8 +228,8 @@ func (db *database) GetAllTests() ([]*Test, error) {
 	return tests, nil
 }
 
-func (db *database) GetTest(id string) (*Test, error) {
-	var test Test
+func (db *database) GetTest(id string) (*models.Test, error) {
+	var test models.Test
 	tx := db.client.First(&test, id)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -248,8 +238,8 @@ func (db *database) GetTest(id string) (*Test, error) {
 	return &test, nil
 }
 
-func (db *database) GetTestsForAssignment(assignmentID string) ([]*Test, error) {
-	var tests []*Test
+func (db *database) GetTestsForAssignment(assignmentID string) ([]*models.Test, error) {
+	var tests []*models.Test
 	tx := db.client.Find(&tests).Where("assignment_id = ?", assignmentID)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -258,8 +248,8 @@ func (db *database) GetTestsForAssignment(assignmentID string) ([]*Test, error) 
 	return tests, nil
 }
 
-func (db *database) CreateSubmission(studentID string, assignmentID uint) (*Submission, error) {
-	submission := Submission{StudentID: studentID, AssignmentID: assignmentID}
+func (db *database) CreateSubmission(studentID string, assignmentID uint) (*models.Submission, error) {
+	submission := models.Submission{StudentID: studentID, AssignmentID: assignmentID}
 	tx := db.client.Create(&submission)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -268,8 +258,8 @@ func (db *database) CreateSubmission(studentID string, assignmentID uint) (*Subm
 	return &submission, nil
 }
 
-func (db *database) GetAllSubmissions() ([]*Submission, error) {
-	var submissions []*Submission
+func (db *database) GetAllSubmissions() ([]*models.Submission, error) {
+	var submissions []*models.Submission
 	tx := db.client.Find(&submissions)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -278,8 +268,8 @@ func (db *database) GetAllSubmissions() ([]*Submission, error) {
 	return submissions, nil
 }
 
-func (db *database) GetSubmission(id string) (*Submission, error) {
-	var submission Submission
+func (db *database) GetSubmission(id string) (*models.Submission, error) {
+	var submission models.Submission
 	tx := db.client.First(&submission, id)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -288,8 +278,8 @@ func (db *database) GetSubmission(id string) (*Submission, error) {
 	return &submission, nil
 }
 
-func (db *database) GetSubmissionsForAssignment(assignmentID string) ([]*Submission, error) {
-	var submissions []*Submission
+func (db *database) GetSubmissionsForAssignment(assignmentID string) ([]*models.Submission, error) {
+	var submissions []*models.Submission
 	tx := db.client.Find(&submissions).Where("assignment_id = ?", assignmentID)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -298,8 +288,8 @@ func (db *database) GetSubmissionsForAssignment(assignmentID string) ([]*Submiss
 	return submissions, nil
 }
 
-func (db *database) CreateResult(score float64, submissionID uint) (*Result, error) {
-	result := Result{Score: score, SubmissionID: submissionID}
+func (db *database) CreateResult(score float64, submissionID uint) (*models.Result, error) {
+	result := models.Result{Score: score, SubmissionID: submissionID}
 	tx := db.client.Create(&result)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -308,8 +298,8 @@ func (db *database) CreateResult(score float64, submissionID uint) (*Result, err
 	return &result, nil
 }
 
-func (db *database) GetAllResults() ([]*Result, error) {
-	var results []*Result
+func (db *database) GetAllResults() ([]*models.Result, error) {
+	var results []*models.Result
 	tx := db.client.Find(&results)
 	if tx.Error != nil {
 		return nil, tx.Error
@@ -318,8 +308,8 @@ func (db *database) GetAllResults() ([]*Result, error) {
 	return results, nil
 }
 
-func (db *database) GetResult(id string) (*Result, error) {
-	var result Result
+func (db *database) GetResult(id string) (*models.Result, error) {
+	var result models.Result
 	tx := db.client.First(&result, id)
 	if tx.Error != nil {
 		return nil, tx.Error

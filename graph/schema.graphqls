@@ -111,4 +111,6 @@ type Mutation {
   createAssignment(input: NewAssignment!): Assignment!
   createTest(input: NewTest!): Test!
   createSubmission(input: NewSubmission!): Submission!
+  register(email: String!, password: String!): String!
+  login(email: String!, password: String!): String!
 }

@@ -7,7 +7,7 @@ package mocks
 import (
 	reflect "reflect"
 
-	db "github.com/COMP4050/square-team-5/api/internal/pkg/db"
+	models "github.com/COMP4050/square-team-5/api/internal/pkg/db/models"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -35,10 +35,10 @@ func (m *MockDatabase) EXPECT() *MockDatabaseMockRecorder {
 }
 
 // CreateAssignment mocks base method.
-func (m *MockDatabase) CreateAssignment(name string, classID uint) (*db.Assignment, error) {
+func (m *MockDatabase) CreateAssignment(name string, classID uint) (*models.Assignment, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateAssignment", name, classID)
-	ret0, _ := ret[0].(*db.Assignment)
+	ret0, _ := ret[0].(*models.Assignment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -50,10 +50,10 @@ func (mr *MockDatabaseMockRecorder) CreateAssignment(name, classID interface{}) 
 }
 
 // CreateClass mocks base method.
-func (m *MockDatabase) CreateClass(name string, unitID uint) (*db.Class, error) {
+func (m *MockDatabase) CreateClass(name string, unitID uint) (*models.Class, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateClass", name, unitID)
-	ret0, _ := ret[0].(*db.Class)
+	ret0, _ := ret[0].(*models.Class)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -65,10 +65,10 @@ func (mr *MockDatabaseMockRecorder) CreateClass(name, unitID interface{}) *gomoc
 }
 
 // CreateResult mocks base method.
-func (m *MockDatabase) CreateResult(score float64, submissionID uint) (*db.Result, error) {
+func (m *MockDatabase) CreateResult(score float64, submissionID uint) (*models.Result, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateResult", score, submissionID)
-	ret0, _ := ret[0].(*db.Result)
+	ret0, _ := ret[0].(*models.Result)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -80,10 +80,10 @@ func (mr *MockDatabaseMockRecorder) CreateResult(score, submissionID interface{}
 }
 
 // CreateSubmission mocks base method.
-func (m *MockDatabase) CreateSubmission(studentID string, assignmentID uint) (*db.Submission, error) {
+func (m *MockDatabase) CreateSubmission(studentID string, assignmentID uint) (*models.Submission, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateSubmission", studentID, assignmentID)
-	ret0, _ := ret[0].(*db.Submission)
+	ret0, _ := ret[0].(*models.Submission)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -95,10 +95,10 @@ func (mr *MockDatabaseMockRecorder) CreateSubmission(studentID, assignmentID int
 }
 
 // CreateTest mocks base method.
-func (m *MockDatabase) CreateTest(name string, assignmentID uint) (*db.Test, error) {
+func (m *MockDatabase) CreateTest(name string, assignmentID uint) (*models.Test, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateTest", name, assignmentID)
-	ret0, _ := ret[0].(*db.Test)
+	ret0, _ := ret[0].(*models.Test)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -110,10 +110,10 @@ func (mr *MockDatabaseMockRecorder) CreateTest(name, assignmentID interface{}) *
 }
 
 // CreateUnit mocks base method.
-func (m *MockDatabase) CreateUnit(name string) (*db.Unit, error) {
+func (m *MockDatabase) CreateUnit(name string) (*models.Unit, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateUnit", name)
-	ret0, _ := ret[0].(*db.Unit)
+	ret0, _ := ret[0].(*models.Unit)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -124,11 +124,26 @@ func (mr *MockDatabaseMockRecorder) CreateUnit(name interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUnit", reflect.TypeOf((*MockDatabase)(nil).CreateUnit), name)
 }
 
+// CreateUser mocks base method.
+func (m *MockDatabase) CreateUser(email, passwordHash string, role models.UserRole) (*models.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateUser", email, passwordHash, role)
+	ret0, _ := ret[0].(*models.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateUser indicates an expected call of CreateUser.
+func (mr *MockDatabaseMockRecorder) CreateUser(email, passwordHash, role interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockDatabase)(nil).CreateUser), email, passwordHash, role)
+}
+
 // GetAllAssignments mocks base method.
-func (m *MockDatabase) GetAllAssignments() ([]*db.Assignment, error) {
+func (m *MockDatabase) GetAllAssignments() ([]*models.Assignment, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllAssignments")
-	ret0, _ := ret[0].([]*db.Assignment)
+	ret0, _ := ret[0].([]*models.Assignment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -140,10 +155,10 @@ func (mr *MockDatabaseMockRecorder) GetAllAssignments() *gomock.Call {
 }
 
 // GetAllClasses mocks base method.
-func (m *MockDatabase) GetAllClasses() ([]*db.Class, error) {
+func (m *MockDatabase) GetAllClasses() ([]*models.Class, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllClasses")
-	ret0, _ := ret[0].([]*db.Class)
+	ret0, _ := ret[0].([]*models.Class)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -155,10 +170,10 @@ func (mr *MockDatabaseMockRecorder) GetAllClasses() *gomock.Call {
 }
 
 // GetAllResults mocks base method.
-func (m *MockDatabase) GetAllResults() ([]*db.Result, error) {
+func (m *MockDatabase) GetAllResults() ([]*models.Result, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllResults")
-	ret0, _ := ret[0].([]*db.Result)
+	ret0, _ := ret[0].([]*models.Result)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -170,10 +185,10 @@ func (mr *MockDatabaseMockRecorder) GetAllResults() *gomock.Call {
 }
 
 // GetAllSubmissions mocks base method.
-func (m *MockDatabase) GetAllSubmissions() ([]*db.Submission, error) {
+func (m *MockDatabase) GetAllSubmissions() ([]*models.Submission, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllSubmissions")
-	ret0, _ := ret[0].([]*db.Submission)
+	ret0, _ := ret[0].([]*models.Submission)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -185,10 +200,10 @@ func (mr *MockDatabaseMockRecorder) GetAllSubmissions() *gomock.Call {
 }
 
 // GetAllTests mocks base method.
-func (m *MockDatabase) GetAllTests() ([]*db.Test, error) {
+func (m *MockDatabase) GetAllTests() ([]*models.Test, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllTests")
-	ret0, _ := ret[0].([]*db.Test)
+	ret0, _ := ret[0].([]*models.Test)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -200,10 +215,10 @@ func (mr *MockDatabaseMockRecorder) GetAllTests() *gomock.Call {
 }
 
 // GetAllUnits mocks base method.
-func (m *MockDatabase) GetAllUnits() ([]*db.Unit, error) {
+func (m *MockDatabase) GetAllUnits() ([]*models.Unit, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllUnits")
-	ret0, _ := ret[0].([]*db.Unit)
+	ret0, _ := ret[0].([]*models.Unit)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -215,10 +230,10 @@ func (mr *MockDatabaseMockRecorder) GetAllUnits() *gomock.Call {
 }
 
 // GetAssignment mocks base method.
-func (m *MockDatabase) GetAssignment(id string) (*db.Assignment, error) {
+func (m *MockDatabase) GetAssignment(id string) (*models.Assignment, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAssignment", id)
-	ret0, _ := ret[0].(*db.Assignment)
+	ret0, _ := ret[0].(*models.Assignment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -230,10 +245,10 @@ func (mr *MockDatabaseMockRecorder) GetAssignment(id interface{}) *gomock.Call {
 }
 
 // GetAssignmentsForClass mocks base method.
-func (m *MockDatabase) GetAssignmentsForClass(classID string) ([]*db.Assignment, error) {
+func (m *MockDatabase) GetAssignmentsForClass(classID string) ([]*models.Assignment, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAssignmentsForClass", classID)
-	ret0, _ := ret[0].([]*db.Assignment)
+	ret0, _ := ret[0].([]*models.Assignment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -245,10 +260,10 @@ func (mr *MockDatabaseMockRecorder) GetAssignmentsForClass(classID interface{}) 
 }
 
 // GetClass mocks base method.
-func (m *MockDatabase) GetClass(id string) (*db.Class, error) {
+func (m *MockDatabase) GetClass(id string) (*models.Class, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetClass", id)
-	ret0, _ := ret[0].(*db.Class)
+	ret0, _ := ret[0].(*models.Class)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -260,10 +275,10 @@ func (mr *MockDatabaseMockRecorder) GetClass(id interface{}) *gomock.Call {
 }
 
 // GetResult mocks base method.
-func (m *MockDatabase) GetResult(id string) (*db.Result, error) {
+func (m *MockDatabase) GetResult(id string) (*models.Result, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetResult", id)
-	ret0, _ := ret[0].(*db.Result)
+	ret0, _ := ret[0].(*models.Result)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -275,10 +290,10 @@ func (mr *MockDatabaseMockRecorder) GetResult(id interface{}) *gomock.Call {
 }
 
 // GetSubmission mocks base method.
-func (m *MockDatabase) GetSubmission(id string) (*db.Submission, error) {
+func (m *MockDatabase) GetSubmission(id string) (*models.Submission, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSubmission", id)
-	ret0, _ := ret[0].(*db.Submission)
+	ret0, _ := ret[0].(*models.Submission)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -290,10 +305,10 @@ func (mr *MockDatabaseMockRecorder) GetSubmission(id interface{}) *gomock.Call {
 }
 
 // GetSubmissionsForAssignment mocks base method.
-func (m *MockDatabase) GetSubmissionsForAssignment(assignmentID string) ([]*db.Submission, error) {
+func (m *MockDatabase) GetSubmissionsForAssignment(assignmentID string) ([]*models.Submission, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSubmissionsForAssignment", assignmentID)
-	ret0, _ := ret[0].([]*db.Submission)
+	ret0, _ := ret[0].([]*models.Submission)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -305,10 +320,10 @@ func (mr *MockDatabaseMockRecorder) GetSubmissionsForAssignment(assignmentID int
 }
 
 // GetTest mocks base method.
-func (m *MockDatabase) GetTest(id string) (*db.Test, error) {
+func (m *MockDatabase) GetTest(id string) (*models.Test, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTest", id)
-	ret0, _ := ret[0].(*db.Test)
+	ret0, _ := ret[0].(*models.Test)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -320,10 +335,10 @@ func (mr *MockDatabaseMockRecorder) GetTest(id interface{}) *gomock.Call {
 }
 
 // GetTestsForAssignment mocks base method.
-func (m *MockDatabase) GetTestsForAssignment(assignmentID string) ([]*db.Test, error) {
+func (m *MockDatabase) GetTestsForAssignment(assignmentID string) ([]*models.Test, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTestsForAssignment", assignmentID)
-	ret0, _ := ret[0].([]*db.Test)
+	ret0, _ := ret[0].([]*models.Test)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -335,10 +350,10 @@ func (mr *MockDatabaseMockRecorder) GetTestsForAssignment(assignmentID interface
 }
 
 // GetUnitByID mocks base method.
-func (m *MockDatabase) GetUnitByID(id string, fetchClasses bool) (*db.Unit, error) {
+func (m *MockDatabase) GetUnitByID(id string, fetchClasses bool) (*models.Unit, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUnitByID", id, fetchClasses)
-	ret0, _ := ret[0].(*db.Unit)
+	ret0, _ := ret[0].(*models.Unit)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -350,10 +365,10 @@ func (mr *MockDatabaseMockRecorder) GetUnitByID(id, fetchClasses interface{}) *g
 }
 
 // GetUnitByName mocks base method.
-func (m *MockDatabase) GetUnitByName(name string) (*db.Unit, error) {
+func (m *MockDatabase) GetUnitByName(name string) (*models.Unit, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUnitByName", name)
-	ret0, _ := ret[0].(*db.Unit)
+	ret0, _ := ret[0].(*models.Unit)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -362,4 +377,19 @@ func (m *MockDatabase) GetUnitByName(name string) (*db.Unit, error) {
 func (mr *MockDatabaseMockRecorder) GetUnitByName(name interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUnitByName", reflect.TypeOf((*MockDatabase)(nil).GetUnitByName), name)
+}
+
+// GetUserByEmail mocks base method.
+func (m *MockDatabase) GetUserByEmail(email string) (*models.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserByEmail", email)
+	ret0, _ := ret[0].(*models.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserByEmail indicates an expected call of GetUserByEmail.
+func (mr *MockDatabaseMockRecorder) GetUserByEmail(email interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByEmail", reflect.TypeOf((*MockDatabase)(nil).GetUserByEmail), email)
 }
