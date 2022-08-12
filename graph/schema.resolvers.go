@@ -47,6 +47,8 @@ func (r *mutationResolver) CreateClass(ctx context.Context, input model.NewClass
 		return nil, err
 	}
 
+	// TODO: Don't allow creating a class with the same name for the same unit
+
 	unit, err := r.DB.GetUnitByID(input.UnitID, false)
 	if err != nil {
 		return nil, fmt.Errorf("error creating class: %w", err)
