@@ -208,6 +208,10 @@ func (r *mutationResolver) CreateSubmission(ctx context.Context, input model.New
 
 // Register is the resolver for the register field.
 func (r *mutationResolver) Register(ctx context.Context, email string, password string) (string, error) {
+	if email == "" || password == "" {
+		return "", fmt.Errorf("email or password must not be empty")
+	}
+
 	user, err := r.DB.GetUserByEmail(email)
 	if err != nil && !errors.Is(err, db.ErrRecordNotFound) {
 		return "", fmt.Errorf("error getting user: %w", err)
@@ -243,6 +247,10 @@ func (r *mutationResolver) Register(ctx context.Context, email string, password 
 
 // Login is the resolver for the login field.
 func (r *mutationResolver) Login(ctx context.Context, email string, password string) (string, error) {
+	if email == "" || password == "" {
+		return "", fmt.Errorf("email or password must not be empty")
+	}
+
 	user, err := r.DB.GetUserByEmail(email)
 	if err != nil {
 		return "", fmt.Errorf("error getting user: %w", err)

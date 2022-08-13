@@ -1,6 +1,7 @@
 package graph
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -81,6 +82,29 @@ func TestUnitResolver(t *testing.T) {
 		assert.Equal(t, "2", resp.Units[1].ID)
 		assert.Equal(t, "COMP1000", resp.Units[0].Name)
 		assert.Equal(t, "COMP1010", resp.Units[1].Name)
+	})
+
+	t.Run("Get All Units - Error", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+
+		customErr := errors.New("custom error")
+		mockDB.EXPECT().GetAllUnits().Return([]*models.Unit{
+			{Model: gorm.Model{ID: 1}, Name: "COMP1000"},
+			{Model: gorm.Model{ID: 2}, Name: "COMP1010"},
+		}, customErr)
+
+		var resp struct {
+			Units []struct{ ID, Name string }
+		}
+		err := c.Post(`{ units() { id name } }`, &resp)
+
+		assert.ErrorContains(t, err, customErr.Error())
+
+		assert.Nil(t, resp.Units)
 	})
 
 	t.Run("Get Unit Not Found", func(t *testing.T) {
@@ -616,5 +640,199 @@ func TestResultResolver(t *testing.T) {
 
 		assert.ErrorContains(t, err, "record not found")
 		assert.NotEqual(t, "1", resp.Result.ID)
+	})
+}
+
+func TestRegisterResolver(t *testing.T) {
+	t.Parallel()
+
+	var resp struct {
+		Register string
+	}
+
+	user := &models.User{Model: gorm.Model{ID: 1}, Email: "a@b.com", PasswordHash: "password"}
+
+	t.Run("New User", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+
+		mockDB.EXPECT().GetUserByEmail("a@b.com").Return(nil, db.ErrRecordNotFound)
+		mockDB.EXPECT().CreateUser("a@b.com", gomock.Any(), models.UserRoleAdmin).Return(user, nil)
+
+		c.MustPost(`mutation { register(email:"a@b.com", password: "password") }`, &resp)
+
+		assert.NotEmpty(t, resp.Register)
+	})
+
+	t.Run("User Exists", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+
+		mockDB.EXPECT().GetUserByEmail("a@b.com").Return(nil, db.ErrRecordNotFound)
+		mockDB.EXPECT().CreateUser("a@b.com", gomock.Any(), models.UserRoleAdmin).Return(user, nil)
+		mockDB.EXPECT().GetUserByEmail("a@b.com").Return(user, db.ErrRecordNotFound)
+
+		c.MustPost(`mutation { register(email:"a@b.com", password: "password") }`, &resp)
+		err := c.Post(`mutation { register(email:"a@b.com", password: "password") }`, &resp)
+		assert.Error(t, err)
+	})
+
+	t.Run("No Email", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+
+		err := c.Post(`mutation { register(email:"", password: "password") }`, &resp)
+		assert.Error(t, err)
+	})
+
+	t.Run("No Password", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+
+		err := c.Post(`mutation { register(email:"a@b.com", password: "") }`, &resp)
+		assert.Error(t, err)
+	})
+
+	t.Run("Error Getting User", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+
+		customErr := errors.New("my cool error")
+		mockDB.EXPECT().GetUserByEmail("a@b.com").Return(nil, customErr)
+
+		err := c.Post(`mutation { register(email:"a@b.com", password: "password") }`, &resp)
+
+		assert.ErrorContains(t, err, customErr.Error())
+	})
+
+	t.Run("Error Creating User - error", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+
+		customErr := errors.New("my cool error")
+		mockDB.EXPECT().GetUserByEmail("a@b.com").Return(nil, db.ErrRecordNotFound)
+		mockDB.EXPECT().CreateUser("a@b.com", gomock.Any(), models.UserRoleAdmin).Return(nil, customErr)
+
+		err := c.Post(`mutation { register(email:"a@b.com", password: "password") }`, &resp)
+
+		assert.ErrorContains(t, err, customErr.Error())
+	})
+
+	t.Run("Error Creating User - nil user", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+
+		mockDB.EXPECT().GetUserByEmail("a@b.com").Return(nil, db.ErrRecordNotFound)
+		mockDB.EXPECT().CreateUser("a@b.com", gomock.Any(), models.UserRoleAdmin).Return(nil, nil)
+
+		err := c.Post(`mutation { register(email:"a@b.com", password: "password") }`, &resp)
+
+		assert.ErrorContains(t, err, "error creating user")
+	})
+}
+
+func TestLoginResolver(t *testing.T) {
+	t.Parallel()
+
+	var resp struct {
+		Login string
+	}
+
+	user := &models.User{Model: gorm.Model{ID: 1}, Email: "a@b.com", PasswordHash: "$2y$10$iVyaKJWb4LzkbCMNKl6biuNQNdBG1WSsn3/cMkg3VHg5RSpQTJW0K"}
+
+	t.Run("User", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+
+		mockDB.EXPECT().GetUserByEmail("a@b.com").Return(user, nil)
+
+		c.MustPost(`mutation { login(email:"a@b.com", password: "password") }`, &resp)
+
+		assert.NotEmpty(t, resp.Login)
+	})
+
+	t.Run("No Email", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+
+		err := c.Post(`mutation { login(email:"", password: "password") }`, &resp)
+		assert.Error(t, err)
+	})
+
+	t.Run("No Password", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+
+		err := c.Post(`mutation { login(email:"a@b.com", password: "") }`, &resp)
+		assert.Error(t, err)
+	})
+
+	t.Run("User Does Not Exist - not found error", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+
+		mockDB.EXPECT().GetUserByEmail("a@b.com").Return(nil, db.ErrRecordNotFound)
+
+		err := c.Post(`mutation { login(email:"a@b.com", password: "password") }`, &resp)
+		assert.Error(t, err)
+	})
+
+	t.Run("User Does Not Exist - nil user", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+
+		mockDB.EXPECT().GetUserByEmail("a@b.com").Return(nil, nil)
+
+		err := c.Post(`mutation { login(email:"a@b.com", password: "password") }`, &resp)
+		assert.ErrorContains(t, err, "user with email: a@b.com does not exist")
+	})
+
+	t.Run("User Incorrect Password", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+
+		mockDB.EXPECT().GetUserByEmail("a@b.com").Return(user, nil)
+
+		err := c.Post(`mutation { login(email:"a@b.com", password: "wrong_password") }`, &resp)
+		assert.Error(t, err)
 	})
 }
