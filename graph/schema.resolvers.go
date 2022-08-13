@@ -4,9 +4,12 @@ package graph
 // will be copied through when generating and any unknown code will be moved to the end.
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"strconv"
 
@@ -188,6 +191,32 @@ func (r *mutationResolver) CreateTest(ctx context.Context, input model.NewTest) 
 	gqlTest := &model.Test{ID: fmt.Sprintf("%d", test.ID), Name: test.Name}
 
 	return gqlTest, nil
+}
+
+// RunTest is the resolver for the runTest field.
+func (r *mutationResolver) RunTest(ctx context.Context, testID string) (bool, error) {
+	body := map[string]string{
+		"s3Key": fmt.Sprintf("tests/test_%s.java", testID),
+	}
+
+	json, err := json.Marshal(body)
+	if err != nil {
+		return false, err
+	}
+
+	testExecutorEndpoint := os.Getenv("TEST_EXECUTOR_ENDPOINT")
+
+	res, err := http.Post(testExecutorEndpoint, "application/json", bytes.NewBuffer(json))
+
+	if err != nil {
+		return false, fmt.Errorf("error running test: %w", err)
+	}
+
+	if res.StatusCode != 200 {
+		return false, fmt.Errorf("error running test: %w", err)
+	}
+
+	return true, nil
 }
 
 // CreateSubmission is the resolver for the createSubmission field.

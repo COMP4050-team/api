@@ -22,7 +22,9 @@ func main() {
 		port = defaultPort
 	}
 
-	db := db.NewDB()
+	dbFilePath := os.Getenv("DB_FILE_PATH")
+
+	db := db.NewDB(dbFilePath)
 
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{DB: db}}))
 

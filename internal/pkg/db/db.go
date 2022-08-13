@@ -46,8 +46,8 @@ type database struct {
 
 var ErrRecordNotFound = gorm.ErrRecordNotFound
 
-func NewDB() Database {
-	db, err := gorm.Open(sqlite.Open("/app/data/test.db"), &gorm.Config{})
+func NewDB(dbFilePath string) Database {
+	db, err := gorm.Open(sqlite.Open(dbFilePath), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}
