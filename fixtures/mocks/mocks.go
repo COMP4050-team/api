@@ -95,18 +95,18 @@ func (mr *MockDatabaseMockRecorder) CreateSubmission(studentID, assignmentID int
 }
 
 // CreateTest mocks base method.
-func (m *MockDatabase) CreateTest(name string, assignmentID uint) (*models.Test, error) {
+func (m *MockDatabase) CreateTest(name, storagePath string, assignmentID uint) (*models.Test, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateTest", name, assignmentID)
+	ret := m.ctrl.Call(m, "CreateTest", name, storagePath, assignmentID)
 	ret0, _ := ret[0].(*models.Test)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateTest indicates an expected call of CreateTest.
-func (mr *MockDatabaseMockRecorder) CreateTest(name, assignmentID interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateTest(name, storagePath, assignmentID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateTest", reflect.TypeOf((*MockDatabase)(nil).CreateTest), name, assignmentID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateTest", reflect.TypeOf((*MockDatabase)(nil).CreateTest), name, storagePath, assignmentID)
 }
 
 // CreateUnit mocks base method.

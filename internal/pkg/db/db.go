@@ -25,7 +25,7 @@ type Database interface {
 	GetAssignment(id string) (*models.Assignment, error)
 	GetAssignmentsForClass(classID string) ([]*models.Assignment, error)
 
-	CreateTest(name string, assignmentID uint) (*models.Test, error)
+	CreateTest(name, storagePath string, assignmentID uint) (*models.Test, error)
 	GetAllTests() ([]*models.Test, error)
 	GetTest(id string) (*models.Test, error)
 	GetTestsForAssignment(assignmentID string) ([]*models.Test, error)
@@ -208,8 +208,8 @@ func (db *database) GetAssignmentsForClass(classID string) ([]*models.Assignment
 	return assignments, nil
 }
 
-func (db *database) CreateTest(name string, assignmentID uint) (*models.Test, error) {
-	test := models.Test{Name: name, AssignmentID: assignmentID}
+func (db *database) CreateTest(name, storagePath string, assignmentID uint) (*models.Test, error) {
+	test := models.Test{Name: name, StoragePath: storagePath, AssignmentID: assignmentID}
 	tx := db.client.Create(&test)
 	if tx.Error != nil {
 		return nil, tx.Error

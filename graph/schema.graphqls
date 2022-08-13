@@ -50,6 +50,7 @@ type Test {
 
 input NewTest {
   name: String!
+  storagePath: String!
   assignmentID: ID!
 }
 

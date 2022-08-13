@@ -35,6 +35,7 @@ type NewSubmission struct {
 
 type NewTest struct {
 	Name         string `json:"name"`
+	StoragePath  string `json:"storagePath"`
 	AssignmentID string `json:"assignmentID"`
 }
 

@@ -173,7 +173,11 @@ func (r *mutationResolver) CreateTest(ctx context.Context, input model.NewTest) 
 		return nil, err
 	}
 
-	test, err := r.DB.CreateTest(input.Name, uint(id))
+	if input.Name == "" || input.StoragePath == "" {
+		return nil, fmt.Errorf("name and storage path are required")
+	}
+
+	test, err := r.DB.CreateTest(input.Name, input.StoragePath, uint(id))
 	if err != nil {
 		return nil, fmt.Errorf("error creating test: %w", err)
 	}

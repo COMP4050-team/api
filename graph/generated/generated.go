@@ -643,6 +643,7 @@ type Test {
 
 input NewTest {
   name: String!
+  storagePath: String!
   assignmentID: ID!
 }
 
@@ -5141,7 +5142,7 @@ func (ec *executionContext) unmarshalInputNewTest(ctx context.Context, obj inter
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "assignmentID"}
+	fieldsInOrder := [...]string{"name", "storagePath", "assignmentID"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -5153,6 +5154,14 @@ func (ec *executionContext) unmarshalInputNewTest(ctx context.Context, obj inter
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "storagePath":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("storagePath"))
+			it.StoragePath, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}

@@ -449,12 +449,13 @@ func TestTestResolver(t *testing.T) {
 		mockDB := mocks.NewMockDatabase(ctrl)
 		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
 
-		mockDB.EXPECT().CreateTest("Test 1", uint(1)).Return(&models.Test{Model: gorm.Model{ID: 1}, Name: "Test 1"}, nil)
+		// Storage path here is tests/{assignmentID}/test_{testID}.java
+		mockDB.EXPECT().CreateTest("Test 1", "tests/1/test_1.java", uint(1)).Return(&models.Test{Model: gorm.Model{ID: 1}, Name: "Test 1"}, nil)
 
 		var resp struct {
 			CreateTest struct{ ID, Name string }
 		}
-		c.MustPost(`mutation { createTest(input: {name: "Test 1", assignmentID: "1"}) { id name } }`, &resp)
+		c.MustPost(`mutation { createTest(input: {name: "Test 1", storagePath: "tests/1/test_1.java",assignmentID: "1"}) { id name } }`, &resp)
 
 		assert.Equal(t, "1", resp.CreateTest.ID)
 		assert.Equal(t, "Test 1", resp.CreateTest.Name)
