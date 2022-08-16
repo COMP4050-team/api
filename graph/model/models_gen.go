@@ -5,7 +5,7 @@ package model
 type Assignment struct {
 	ID          string        `json:"id"`
 	Name        string        `json:"name"`
-	DueDate     string        `json:"dueDate"`
+	DueDate     int           `json:"dueDate"`
 	Tests       []*Test       `json:"tests"`
 	Submissions []*Submission `json:"submissions"`
 }
@@ -19,7 +19,7 @@ type Class struct {
 
 type NewAssignment struct {
 	Name    string `json:"name"`
-	DueDate string `json:"dueDate"`
+	DueDate int    `json:"dueDate"`
 	ClassID string `json:"classID"`
 }
 

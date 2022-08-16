@@ -318,21 +318,20 @@ func TestAssignmentResolver(t *testing.T) {
 
 		var resp struct {
 			Assignments []struct {
-				ID, Name, DueDate string
-				Tests             []model.Test
-				Submissions       []model.Submission
+				ID, Name    string
+				DueDate     int
+				Tests       []model.Test
+				Submissions []model.Submission
 			}
 		}
 		c.MustPost(`{ assignments() { id name dueDate tests { id } submissions { id } } }`, &resp)
-
-		dueDateString := dueDate.Format("02/01/2006")
 
 		assert.Equal(t, "1", resp.Assignments[0].ID)
 		assert.Equal(t, "2", resp.Assignments[1].ID)
 		assert.Equal(t, "Assignment 1", resp.Assignments[0].Name)
 		assert.Equal(t, "Assignment 2", resp.Assignments[1].Name)
-		assert.Equal(t, dueDateString, resp.Assignments[0].DueDate)
-		assert.Equal(t, dueDateString, resp.Assignments[1].DueDate)
+		assert.Equal(t, int(dueDate.Unix()), resp.Assignments[0].DueDate)
+		assert.Equal(t, int(dueDate.Unix()), resp.Assignments[1].DueDate)
 		assert.Equal(t, []model.Test{{ID: "1"}}, resp.Assignments[0].Tests)
 		assert.Equal(t, []model.Test{{ID: "2"}}, resp.Assignments[1].Tests)
 		assert.Equal(t, []model.Submission{{ID: "1"}}, resp.Assignments[0].Submissions)
@@ -364,12 +363,12 @@ func TestAssignmentResolver(t *testing.T) {
 		mockDB := mocks.NewMockDatabase(ctrl)
 		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
 
-		mockDB.EXPECT().CreateAssignment("Assignment 1", uint(1)).Return(&models.Assignment{Model: gorm.Model{ID: 1}, Name: "Assignment 1"}, nil)
+		mockDB.EXPECT().CreateAssignment("Assignment 1", 1660657596, uint(1)).Return(&models.Assignment{Model: gorm.Model{ID: 1}, Name: "Assignment 1"}, nil)
 
 		var resp struct {
 			CreateAssignment struct{ ID, Name string }
 		}
-		c.MustPost(`mutation { createAssignment(input: {name: "Assignment 1", dueDate: "02/03/2023", classID: "1"}) { id name } }`, &resp)
+		c.MustPost(`mutation { createAssignment(input: {name: "Assignment 1", dueDate: 1660657596, classID: "1"}) { id name } }`, &resp)
 
 		assert.Equal(t, "1", resp.CreateAssignment.ID)
 		assert.Equal(t, "Assignment 1", resp.CreateAssignment.Name)

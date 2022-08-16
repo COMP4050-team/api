@@ -35,18 +35,18 @@ func (m *MockDatabase) EXPECT() *MockDatabaseMockRecorder {
 }
 
 // CreateAssignment mocks base method.
-func (m *MockDatabase) CreateAssignment(name string, classID uint) (*models.Assignment, error) {
+func (m *MockDatabase) CreateAssignment(name string, dueDate int, classID uint) (*models.Assignment, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateAssignment", name, classID)
+	ret := m.ctrl.Call(m, "CreateAssignment", name, dueDate, classID)
 	ret0, _ := ret[0].(*models.Assignment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateAssignment indicates an expected call of CreateAssignment.
-func (mr *MockDatabaseMockRecorder) CreateAssignment(name, classID interface{}) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) CreateAssignment(name, dueDate, classID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAssignment", reflect.TypeOf((*MockDatabase)(nil).CreateAssignment), name, classID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAssignment", reflect.TypeOf((*MockDatabase)(nil).CreateAssignment), name, dueDate, classID)
 }
 
 // CreateClass mocks base method.
