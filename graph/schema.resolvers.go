@@ -10,7 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"strconv"
 
 	"github.com/COMP4050/square-team-5/api/graph/generated"
@@ -204,7 +203,7 @@ func (r *mutationResolver) RunTest(ctx context.Context, testID string) (bool, er
 		return false, err
 	}
 
-	testExecutorEndpoint := os.Getenv("TEST_EXECUTOR_ENDPOINT")
+	testExecutorEndpoint := r.Config.TestExecutorEndpoint
 
 	res, err := http.Post(testExecutorEndpoint, "application/json", bytes.NewBuffer(json))
 
@@ -270,7 +269,7 @@ func (r *mutationResolver) Register(ctx context.Context, email string, password 
 		"sub": user.Email,
 	})
 
-	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	tokenString, err := token.SignedString([]byte(r.Config.JWTSecret))
 	if err != nil {
 		return "", fmt.Errorf("error signing token: %w", err)
 	}
@@ -301,7 +300,7 @@ func (r *mutationResolver) Login(ctx context.Context, email string, password str
 		"sub": user.Email,
 	})
 
-	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	tokenString, err := token.SignedString([]byte(r.Config.JWTSecret))
 	if err != nil {
 		return "", fmt.Errorf("error signing token: %w", err)
 	}

@@ -1,6 +1,7 @@
 package graph
 
 import (
+	"github.com/COMP4050/square-team-5/api/internal/pkg/config"
 	"github.com/COMP4050/square-team-5/api/internal/pkg/db"
 )
 
@@ -9,5 +10,6 @@ import (
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	DB db.Database
+	Config config.Config
+	DB     db.Database
 }
