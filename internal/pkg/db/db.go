@@ -1,6 +1,8 @@
 package db
 
 import (
+	"time"
+
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
@@ -20,7 +22,7 @@ type Database interface {
 	GetAllClasses() ([]*models.Class, error)
 	GetClass(id string) (*models.Class, error)
 
-	CreateAssignment(name string, classID uint) (*models.Assignment, error)
+	CreateAssignment(name string, dueDate int, classID uint) (*models.Assignment, error)
 	GetAllAssignments() ([]*models.Assignment, error)
 	GetAssignment(id string) (*models.Assignment, error)
 	GetAssignmentsForClass(classID string) ([]*models.Assignment, error)
@@ -168,8 +170,8 @@ func (db *database) GetClass(id string) (*models.Class, error) {
 	return &class, nil
 }
 
-func (db *database) CreateAssignment(name string, classID uint) (*models.Assignment, error) {
-	assignment := models.Assignment{Name: name, ClassID: classID}
+func (db *database) CreateAssignment(name string, dueDate int, classID uint) (*models.Assignment, error) {
+	assignment := models.Assignment{Name: name, DueDate: time.Unix(int64(dueDate), 0), ClassID: classID}
 	tx := db.client.Create(&assignment)
 	if tx.Error != nil {
 		return nil, tx.Error

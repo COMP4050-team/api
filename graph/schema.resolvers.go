@@ -86,7 +86,7 @@ func (r *classResolver) Assignments(ctx context.Context, obj *model.Class) ([]*m
 		gqlAssignments = append(gqlAssignments, &model.Assignment{
 			ID:          fmt.Sprintf("%d", assignment.ID),
 			Name:        assignment.Name,
-			DueDate:     assignment.DueDate.Format("02/01/2006"),
+			DueDate:     int(assignment.DueDate.Unix()),
 			Tests:       []*model.Test{},
 			Submissions: []*model.Submission{},
 		})
@@ -156,7 +156,7 @@ func (r *mutationResolver) CreateAssignment(ctx context.Context, input model.New
 		return nil, err
 	}
 
-	assignment, err := r.DB.CreateAssignment(input.Name, uint(id))
+	assignment, err := r.DB.CreateAssignment(input.Name, input.DueDate, uint(id))
 	if err != nil {
 		return nil, fmt.Errorf("error creating assignment: %w", err)
 	}
@@ -390,7 +390,7 @@ func (r *queryResolver) Assignments(ctx context.Context) ([]*model.Assignment, e
 		gqlAssignments = append(gqlAssignments, &model.Assignment{
 			ID:          fmt.Sprintf("%d", assignment.ID),
 			Name:        assignment.Name,
-			DueDate:     assignment.DueDate.Format("02/01/2006"),
+			DueDate:     int(assignment.DueDate.Unix()),
 			Tests:       []*model.Test{},
 			Submissions: []*model.Submission{},
 		})

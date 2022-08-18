@@ -29,14 +29,14 @@ input NewClass {
 type Assignment {
   id: ID!
   name: String!
-  dueDate: String!
+  dueDate: Int!
   tests: [Test!]!
   submissions: [Submission!]!
 }
 
 input NewAssignment {
   name: String!
-  dueDate: String!
+  dueDate: Int!
   classID: ID!
 }
 
