@@ -1,4 +1,4 @@
-.PHONY: generate test coverage
+.PHONY: generate test coverage run
 
 generate:
 	go generate ./...
@@ -10,4 +10,4 @@ coverage:
 	go tool cover -html=cover.out
 
 run:
-	PORT=8000 JWT_SECRET=catjam DB_FILE_PATH=test.db TEST_EXECUTOR_ENDPOINT=http://127.0.0.1:8080/ go run ./...
+	go run ./... -jwt-secret catjam
