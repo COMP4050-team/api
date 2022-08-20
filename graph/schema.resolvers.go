@@ -71,7 +71,11 @@ func (r *assignmentResolver) Submissions(ctx context.Context, obj *model.Assignm
 
 // Assignments is the resolver for the assignments field.
 func (r *classResolver) Assignments(ctx context.Context, obj *model.Class) ([]*model.Assignment, error) {
-	assignments, err := r.DB.GetAssignmentsForClass(obj.ID)
+	classID, err := strconv.ParseUint(obj.ID, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	assignments, err := r.DB.GetAssignmentsForClass(uint(classID))
 	if err != nil {
 		return nil, err
 	}
