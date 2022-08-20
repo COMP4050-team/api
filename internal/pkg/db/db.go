@@ -25,7 +25,7 @@ type Database interface {
 	CreateAssignment(name string, dueDate int, classID uint) (*models.Assignment, error)
 	GetAllAssignments() ([]*models.Assignment, error)
 	GetAssignment(id string) (*models.Assignment, error)
-	GetAssignmentsForClass(classID string) ([]*models.Assignment, error)
+	GetAssignmentsForClass(classID uint) ([]*models.Assignment, error)
 
 	CreateTest(name, storagePath string, assignmentID uint) (*models.Test, error)
 	GetAllTests() ([]*models.Test, error)
@@ -200,9 +200,9 @@ func (db *database) GetAssignment(id string) (*models.Assignment, error) {
 	return &assignment, nil
 }
 
-func (db *database) GetAssignmentsForClass(classID string) ([]*models.Assignment, error) {
+func (db *database) GetAssignmentsForClass(classID uint) ([]*models.Assignment, error) {
 	var assignments []*models.Assignment
-	tx := db.client.Find(&assignments).Where("class_id = ?", classID)
+	tx := db.client.Where("class_id = ?", classID).Find(&assignments)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
@@ -242,7 +242,7 @@ func (db *database) GetTest(id string) (*models.Test, error) {
 
 func (db *database) GetTestsForAssignment(assignmentID string) ([]*models.Test, error) {
 	var tests []*models.Test
-	tx := db.client.Find(&tests).Where("assignment_id = ?", assignmentID)
+	tx := db.client.Where("assignment_id = ?", assignmentID).Find(&tests)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
@@ -282,7 +282,7 @@ func (db *database) GetSubmission(id string) (*models.Submission, error) {
 
 func (db *database) GetSubmissionsForAssignment(assignmentID string) ([]*models.Submission, error) {
 	var submissions []*models.Submission
-	tx := db.client.Find(&submissions).Where("assignment_id = ?", assignmentID)
+	tx := db.client.Where("assignment_id = ?", assignmentID).Find(&submissions)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
