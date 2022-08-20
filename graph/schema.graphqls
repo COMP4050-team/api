@@ -79,27 +79,27 @@ type Result {
 ## Queries ##
 type Query {
   # Get all units
-  units: [Unit!]!
+  units(from: Int): [Unit!]!
   # Get a unit by id
   unit(id: ID!): Unit
   # Get all classes
-  classes: [Class!]!
+  classes(from: Int): [Class!]!
   # Get a class by id
   class(id: ID!): Class
   # Get all assignments
-  assignments: [Assignment!]!
+  assignments(from: Int): [Assignment!]!
   # Get an assignment by id
   assignment(id: ID!): Assignment
   # Get all tests
-  tests: [Test!]!
+  tests(from: Int): [Test!]!
   # Get a test by id
   test(id: ID!): Test
   # Get all submissions
-  submissions: [Submission!]!
+  submissions(from: Int): [Submission!]!
   # Get a submission by id
   submission(id: ID!): Submission
   # Get all results
-  results: [Result!]!
+  results(from: Int): [Result!]!
   # Get a result by id
   result(id: ID!): Result
 }
