@@ -193,7 +193,7 @@ func TestClassResolver(t *testing.T) {
 		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
 
 		mockDB.EXPECT().GetClass("1").Return(&models.Class{Model: gorm.Model{ID: 1}, Name: "Class 1"}, nil)
-		mockDB.EXPECT().GetAssignmentsForClass("1").Return([]*models.Assignment{{Model: gorm.Model{ID: 1}, Name: "Assignment 1"}}, nil)
+		mockDB.EXPECT().GetAssignmentsForClass(uint(1)).Return([]*models.Assignment{{Model: gorm.Model{ID: 1}, Name: "Assignment 1"}}, nil)
 
 		var resp struct {
 			Class struct {
@@ -218,8 +218,8 @@ func TestClassResolver(t *testing.T) {
 			{Model: gorm.Model{ID: 1}, Name: "Class 1", UnitID: 1},
 			{Model: gorm.Model{ID: 2}, Name: "Class 2", UnitID: 1},
 		}, nil)
-		mockDB.EXPECT().GetAssignmentsForClass("1").Return([]*models.Assignment{{Model: gorm.Model{ID: 1}, Name: "Assignment 1"}}, nil)
-		mockDB.EXPECT().GetAssignmentsForClass("2").Return([]*models.Assignment{{Model: gorm.Model{ID: 2}, Name: "Assignment 2"}}, nil)
+		mockDB.EXPECT().GetAssignmentsForClass(uint(1)).Return([]*models.Assignment{{Model: gorm.Model{ID: 1}, Name: "Assignment 1"}}, nil)
+		mockDB.EXPECT().GetAssignmentsForClass(uint(2)).Return([]*models.Assignment{{Model: gorm.Model{ID: 2}, Name: "Assignment 2"}}, nil)
 
 		var resp struct {
 			Classes []struct {

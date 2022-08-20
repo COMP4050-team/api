@@ -245,7 +245,7 @@ func (mr *MockDatabaseMockRecorder) GetAssignment(id interface{}) *gomock.Call {
 }
 
 // GetAssignmentsForClass mocks base method.
-func (m *MockDatabase) GetAssignmentsForClass(classID string) ([]*models.Assignment, error) {
+func (m *MockDatabase) GetAssignmentsForClass(classID uint) ([]*models.Assignment, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAssignmentsForClass", classID)
 	ret0, _ := ret[0].([]*models.Assignment)
