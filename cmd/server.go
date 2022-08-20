@@ -3,16 +3,17 @@ package main
 import (
 	"fmt"
 	"log"
-	"net/http"
-
-	"github.com/rs/cors"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+
 	"github.com/COMP4050/square-team-5/api/graph"
 	"github.com/COMP4050/square-team-5/api/graph/generated"
 	"github.com/COMP4050/square-team-5/api/internal/pkg/config"
 	"github.com/COMP4050/square-team-5/api/internal/pkg/db"
+	"github.com/COMP4050/square-team-5/api/internal/pkg/web/auth"
 )
 
 func main() {
@@ -20,13 +21,19 @@ func main() {
 
 	db := db.NewDB(config.DBFilePath)
 
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{DB: db}}))
+	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{DB: db, Config: config}}))
 
-	corsHandler := cors.Default().Handler(srv)
+	r := gin.New()
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000", "https://*.vercel.app"},
+		AllowCredentials: true,
+		AllowHeaders:     []string{"Content-Type"},
+	}))
+	r.Use(auth.AuthHandler())
 
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", corsHandler)
+	r.Any("/", gin.WrapH(playground.Handler("GraphQL playground", "/query")))
+	r.POST("/query", gin.WrapH(srv))
 
 	log.Printf("connect to http://localhost:%d/ for GraphQL playground", config.Port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), nil))
+	r.Run(fmt.Sprintf(":%d", config.Port))
 }

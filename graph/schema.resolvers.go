@@ -12,11 +12,13 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/golang-jwt/jwt"
+
 	"github.com/COMP4050/square-team-5/api/graph/generated"
 	"github.com/COMP4050/square-team-5/api/graph/model"
 	"github.com/COMP4050/square-team-5/api/internal/pkg/db"
 	"github.com/COMP4050/square-team-5/api/internal/pkg/db/models"
-	"github.com/golang-jwt/jwt"
+	"github.com/COMP4050/square-team-5/api/internal/pkg/web/auth"
 )
 
 func getOffset(from *int) int {
@@ -112,6 +114,11 @@ func (r *classResolver) Assignments(ctx context.Context, obj *model.Class) ([]*m
 
 // CreateUnit is the resolver for the createUnit field.
 func (r *mutationResolver) CreateUnit(ctx context.Context, input model.NewUnit) (*model.Unit, error) {
+	user := auth.GetUser(ctx)
+	if user == nil {
+		return nil, fmt.Errorf("user not authenticated")
+	}
+
 	// Check if a unit with the same name already exists
 	existingUnit, err := r.DB.GetUnitByName(input.Name)
 	if err != nil && !errors.Is(err, db.ErrRecordNotFound) {
@@ -136,6 +143,11 @@ func (r *mutationResolver) CreateUnit(ctx context.Context, input model.NewUnit) 
 
 // CreateClass is the resolver for the createClass field.
 func (r *mutationResolver) CreateClass(ctx context.Context, input model.NewClass) (*model.Class, error) {
+	user := auth.GetUser(ctx)
+	if user == nil {
+		return nil, fmt.Errorf("user not authenticated")
+	}
+
 	unitID, err := strconv.ParseUint(input.UnitID, 10, 64)
 	if err != nil {
 		return nil, err
@@ -166,6 +178,11 @@ func (r *mutationResolver) CreateClass(ctx context.Context, input model.NewClass
 
 // CreateAssignment is the resolver for the createAssignment field.
 func (r *mutationResolver) CreateAssignment(ctx context.Context, input model.NewAssignment) (*model.Assignment, error) {
+	user := auth.GetUser(ctx)
+	if user == nil {
+		return nil, fmt.Errorf("user not authenticated")
+	}
+
 	id, err := strconv.ParseUint(input.ClassID, 10, 64)
 	if err != nil {
 		return nil, err
@@ -186,6 +203,11 @@ func (r *mutationResolver) CreateAssignment(ctx context.Context, input model.New
 
 // CreateTest is the resolver for the createTest field.
 func (r *mutationResolver) CreateTest(ctx context.Context, input model.NewTest) (*model.Test, error) {
+	user := auth.GetUser(ctx)
+	if user == nil {
+		return nil, fmt.Errorf("user not authenticated")
+	}
+
 	id, err := strconv.ParseUint(input.AssignmentID, 10, 64)
 	if err != nil {
 		return nil, err
@@ -210,6 +232,11 @@ func (r *mutationResolver) CreateTest(ctx context.Context, input model.NewTest) 
 
 // RunTest is the resolver for the runTest field.
 func (r *mutationResolver) RunTest(ctx context.Context, testID string) (bool, error) {
+	user := auth.GetUser(ctx)
+	if user == nil {
+		return false, fmt.Errorf("user not authenticated")
+	}
+
 	body := map[string]string{
 		"s3Key": fmt.Sprintf("tests/test_%s.java", testID),
 	}
@@ -236,6 +263,11 @@ func (r *mutationResolver) RunTest(ctx context.Context, testID string) (bool, er
 
 // CreateSubmission is the resolver for the createSubmission field.
 func (r *mutationResolver) CreateSubmission(ctx context.Context, input model.NewSubmission) (*model.Submission, error) {
+	user := auth.GetUser(ctx)
+	if user == nil {
+		return nil, fmt.Errorf("user not authenticated")
+	}
+
 	assignmentID, err := strconv.ParseUint(input.AssignmentID, 10, 64)
 	if err != nil {
 		return nil, err
