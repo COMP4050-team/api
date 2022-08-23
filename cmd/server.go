@@ -26,7 +26,13 @@ func main() {
 
 	db := db.NewDB(config.DBFilePath)
 
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{DB: db, Config: config}}))
+	srv := handler.NewDefaultServer(
+		generated.NewExecutableSchema(
+			generated.Config{
+				Resolvers: &graph.Resolver{DB: db, Config: config, ExtractUser: auth.ExtractUser},
+			},
+		),
+	)
 
 	r := gin.New()
 	r.Use(cors.New(cors.Config{

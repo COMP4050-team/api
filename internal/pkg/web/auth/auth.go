@@ -62,7 +62,7 @@ func AuthHandler() gin.HandlerFunc {
 	}
 }
 
-func GetUser(ctx context.Context) *models.User {
+func ExtractUser(ctx context.Context) *models.User {
 	user, ok := ctx.Value(userCtxKey).(models.User)
 	if !ok {
 		return nil

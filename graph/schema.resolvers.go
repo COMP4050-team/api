@@ -18,7 +18,6 @@ import (
 	"github.com/COMP4050/square-team-5/api/graph/model"
 	"github.com/COMP4050/square-team-5/api/internal/pkg/db"
 	"github.com/COMP4050/square-team-5/api/internal/pkg/db/models"
-	"github.com/COMP4050/square-team-5/api/internal/pkg/web/auth"
 )
 
 func getOffset(from *int) int {
@@ -114,7 +113,7 @@ func (r *classResolver) Assignments(ctx context.Context, obj *model.Class) ([]*m
 
 // CreateUnit is the resolver for the createUnit field.
 func (r *mutationResolver) CreateUnit(ctx context.Context, input model.NewUnit) (*model.Unit, error) {
-	user := auth.GetUser(ctx)
+	user := r.ExtractUser(ctx)
 	if user == nil {
 		return nil, fmt.Errorf("user not authenticated")
 	}
@@ -143,7 +142,7 @@ func (r *mutationResolver) CreateUnit(ctx context.Context, input model.NewUnit) 
 
 // CreateClass is the resolver for the createClass field.
 func (r *mutationResolver) CreateClass(ctx context.Context, input model.NewClass) (*model.Class, error) {
-	user := auth.GetUser(ctx)
+	user := r.ExtractUser(ctx)
 	if user == nil {
 		return nil, fmt.Errorf("user not authenticated")
 	}
@@ -178,7 +177,7 @@ func (r *mutationResolver) CreateClass(ctx context.Context, input model.NewClass
 
 // CreateAssignment is the resolver for the createAssignment field.
 func (r *mutationResolver) CreateAssignment(ctx context.Context, input model.NewAssignment) (*model.Assignment, error) {
-	user := auth.GetUser(ctx)
+	user := r.ExtractUser(ctx)
 	if user == nil {
 		return nil, fmt.Errorf("user not authenticated")
 	}
@@ -203,7 +202,7 @@ func (r *mutationResolver) CreateAssignment(ctx context.Context, input model.New
 
 // CreateTest is the resolver for the createTest field.
 func (r *mutationResolver) CreateTest(ctx context.Context, input model.NewTest) (*model.Test, error) {
-	user := auth.GetUser(ctx)
+	user := r.ExtractUser(ctx)
 	if user == nil {
 		return nil, fmt.Errorf("user not authenticated")
 	}
@@ -232,7 +231,7 @@ func (r *mutationResolver) CreateTest(ctx context.Context, input model.NewTest) 
 
 // RunTest is the resolver for the runTest field.
 func (r *mutationResolver) RunTest(ctx context.Context, testID string) (bool, error) {
-	user := auth.GetUser(ctx)
+	user := r.ExtractUser(ctx)
 	if user == nil {
 		return false, fmt.Errorf("user not authenticated")
 	}
@@ -263,7 +262,7 @@ func (r *mutationResolver) RunTest(ctx context.Context, testID string) (bool, er
 
 // CreateSubmission is the resolver for the createSubmission field.
 func (r *mutationResolver) CreateSubmission(ctx context.Context, input model.NewSubmission) (*model.Submission, error) {
-	user := auth.GetUser(ctx)
+	user := r.ExtractUser(ctx)
 	if user == nil {
 		return nil, fmt.Errorf("user not authenticated")
 	}
