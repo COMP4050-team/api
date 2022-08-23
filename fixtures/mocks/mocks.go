@@ -140,93 +140,93 @@ func (mr *MockDatabaseMockRecorder) CreateUser(email, passwordHash, role interfa
 }
 
 // GetAllAssignments mocks base method.
-func (m *MockDatabase) GetAllAssignments() ([]*models.Assignment, error) {
+func (m *MockDatabase) GetAllAssignments(from int) ([]*models.Assignment, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllAssignments")
+	ret := m.ctrl.Call(m, "GetAllAssignments", from)
 	ret0, _ := ret[0].([]*models.Assignment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllAssignments indicates an expected call of GetAllAssignments.
-func (mr *MockDatabaseMockRecorder) GetAllAssignments() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAllAssignments(from interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllAssignments", reflect.TypeOf((*MockDatabase)(nil).GetAllAssignments))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllAssignments", reflect.TypeOf((*MockDatabase)(nil).GetAllAssignments), from)
 }
 
 // GetAllClasses mocks base method.
-func (m *MockDatabase) GetAllClasses() ([]*models.Class, error) {
+func (m *MockDatabase) GetAllClasses(from int) ([]*models.Class, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllClasses")
+	ret := m.ctrl.Call(m, "GetAllClasses", from)
 	ret0, _ := ret[0].([]*models.Class)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllClasses indicates an expected call of GetAllClasses.
-func (mr *MockDatabaseMockRecorder) GetAllClasses() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAllClasses(from interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllClasses", reflect.TypeOf((*MockDatabase)(nil).GetAllClasses))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllClasses", reflect.TypeOf((*MockDatabase)(nil).GetAllClasses), from)
 }
 
 // GetAllResults mocks base method.
-func (m *MockDatabase) GetAllResults() ([]*models.Result, error) {
+func (m *MockDatabase) GetAllResults(from int) ([]*models.Result, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllResults")
+	ret := m.ctrl.Call(m, "GetAllResults", from)
 	ret0, _ := ret[0].([]*models.Result)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllResults indicates an expected call of GetAllResults.
-func (mr *MockDatabaseMockRecorder) GetAllResults() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAllResults(from interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllResults", reflect.TypeOf((*MockDatabase)(nil).GetAllResults))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllResults", reflect.TypeOf((*MockDatabase)(nil).GetAllResults), from)
 }
 
 // GetAllSubmissions mocks base method.
-func (m *MockDatabase) GetAllSubmissions() ([]*models.Submission, error) {
+func (m *MockDatabase) GetAllSubmissions(from int) ([]*models.Submission, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllSubmissions")
+	ret := m.ctrl.Call(m, "GetAllSubmissions", from)
 	ret0, _ := ret[0].([]*models.Submission)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllSubmissions indicates an expected call of GetAllSubmissions.
-func (mr *MockDatabaseMockRecorder) GetAllSubmissions() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAllSubmissions(from interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllSubmissions", reflect.TypeOf((*MockDatabase)(nil).GetAllSubmissions))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllSubmissions", reflect.TypeOf((*MockDatabase)(nil).GetAllSubmissions), from)
 }
 
 // GetAllTests mocks base method.
-func (m *MockDatabase) GetAllTests() ([]*models.Test, error) {
+func (m *MockDatabase) GetAllTests(from int) ([]*models.Test, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllTests")
+	ret := m.ctrl.Call(m, "GetAllTests", from)
 	ret0, _ := ret[0].([]*models.Test)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllTests indicates an expected call of GetAllTests.
-func (mr *MockDatabaseMockRecorder) GetAllTests() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAllTests(from interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllTests", reflect.TypeOf((*MockDatabase)(nil).GetAllTests))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllTests", reflect.TypeOf((*MockDatabase)(nil).GetAllTests), from)
 }
 
 // GetAllUnits mocks base method.
-func (m *MockDatabase) GetAllUnits() ([]*models.Unit, error) {
+func (m *MockDatabase) GetAllUnits(from int) ([]*models.Unit, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllUnits")
+	ret := m.ctrl.Call(m, "GetAllUnits", from)
 	ret0, _ := ret[0].([]*models.Unit)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetAllUnits indicates an expected call of GetAllUnits.
-func (mr *MockDatabaseMockRecorder) GetAllUnits() *gomock.Call {
+func (mr *MockDatabaseMockRecorder) GetAllUnits(from interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllUnits", reflect.TypeOf((*MockDatabase)(nil).GetAllUnits))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllUnits", reflect.TypeOf((*MockDatabase)(nil).GetAllUnits), from)
 }
 
 // GetAssignment mocks base method.

@@ -14,37 +14,39 @@ type Database interface {
 	GetUserByEmail(email string) (*models.User, error)
 
 	CreateUnit(name string) (*models.Unit, error)
-	GetAllUnits() ([]*models.Unit, error)
+	GetAllUnits(from int) ([]*models.Unit, error)
 	GetUnitByID(id string, fetchClasses bool) (*models.Unit, error)
 	GetUnitByName(name string) (*models.Unit, error)
 
 	CreateClass(name string, unitID uint) (*models.Class, error)
-	GetAllClasses() ([]*models.Class, error)
+	GetAllClasses(from int) ([]*models.Class, error)
 	GetClass(id string) (*models.Class, error)
 
 	CreateAssignment(name string, dueDate int, classID uint) (*models.Assignment, error)
-	GetAllAssignments() ([]*models.Assignment, error)
+	GetAllAssignments(from int) ([]*models.Assignment, error)
 	GetAssignment(id string) (*models.Assignment, error)
 	GetAssignmentsForClass(classID uint) ([]*models.Assignment, error)
 
 	CreateTest(name, storagePath string, assignmentID uint) (*models.Test, error)
-	GetAllTests() ([]*models.Test, error)
+	GetAllTests(from int) ([]*models.Test, error)
 	GetTest(id string) (*models.Test, error)
 	GetTestsForAssignment(assignmentID string) ([]*models.Test, error)
 
 	CreateSubmission(studentID string, assignmentID uint) (*models.Submission, error)
-	GetAllSubmissions() ([]*models.Submission, error)
+	GetAllSubmissions(from int) ([]*models.Submission, error)
 	GetSubmission(id string) (*models.Submission, error)
 	GetSubmissionsForAssignment(assignmentID string) ([]*models.Submission, error)
 
 	CreateResult(score float64, submissionID uint) (*models.Result, error)
-	GetAllResults() ([]*models.Result, error)
+	GetAllResults(from int) ([]*models.Result, error)
 	GetResult(id string) (*models.Result, error)
 }
 
 type database struct {
 	client *gorm.DB
 }
+
+const PAGE_SIZE = 50
 
 var ErrRecordNotFound = gorm.ErrRecordNotFound
 
@@ -101,9 +103,9 @@ func (db *database) CreateUnit(name string) (*models.Unit, error) {
 	return &unit, nil
 }
 
-func (db *database) GetAllUnits() ([]*models.Unit, error) {
+func (db *database) GetAllUnits(from int) ([]*models.Unit, error) {
 	var units []*models.Unit
-	tx := db.client.Find(&units)
+	tx := db.client.Where("id >= ? AND id < ?", from, from+PAGE_SIZE).Find(&units)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
@@ -150,9 +152,9 @@ func (db *database) CreateClass(name string, unitID uint) (*models.Class, error)
 	return &class, nil
 }
 
-func (db *database) GetAllClasses() ([]*models.Class, error) {
+func (db *database) GetAllClasses(from int) ([]*models.Class, error) {
 	var classes []*models.Class
-	tx := db.client.Find(&classes)
+	tx := db.client.Where("id >= ? AND id < ?", from, from+PAGE_SIZE).Find(&classes)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
@@ -180,9 +182,9 @@ func (db *database) CreateAssignment(name string, dueDate int, classID uint) (*m
 	return &assignment, nil
 }
 
-func (db *database) GetAllAssignments() ([]*models.Assignment, error) {
+func (db *database) GetAllAssignments(from int) ([]*models.Assignment, error) {
 	var assignments []*models.Assignment
-	tx := db.client.Find(&assignments)
+	tx := db.client.Where("id >= ? AND id < ?", from, from+PAGE_SIZE).Find(&assignments)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
@@ -220,9 +222,9 @@ func (db *database) CreateTest(name, storagePath string, assignmentID uint) (*mo
 	return &test, nil
 }
 
-func (db *database) GetAllTests() ([]*models.Test, error) {
+func (db *database) GetAllTests(from int) ([]*models.Test, error) {
 	var tests []*models.Test
-	tx := db.client.Find(&tests)
+	tx := db.client.Where("id >= ? AND id < ?", from, from+PAGE_SIZE).Find(&tests)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
@@ -260,9 +262,9 @@ func (db *database) CreateSubmission(studentID string, assignmentID uint) (*mode
 	return &submission, nil
 }
 
-func (db *database) GetAllSubmissions() ([]*models.Submission, error) {
+func (db *database) GetAllSubmissions(from int) ([]*models.Submission, error) {
 	var submissions []*models.Submission
-	tx := db.client.Find(&submissions)
+	tx := db.client.Where("id >= ? AND id < ?", from, from+PAGE_SIZE).Find(&submissions)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
@@ -300,9 +302,9 @@ func (db *database) CreateResult(score float64, submissionID uint) (*models.Resu
 	return &result, nil
 }
 
-func (db *database) GetAllResults() ([]*models.Result, error) {
+func (db *database) GetAllResults(from int) ([]*models.Result, error) {
 	var results []*models.Result
-	tx := db.client.Find(&results)
+	tx := db.client.Where("id >= ? AND id < ?", from, from+PAGE_SIZE).Find(&results)
 	if tx.Error != nil {
 		return nil, tx.Error
 	}

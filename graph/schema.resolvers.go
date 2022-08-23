@@ -19,6 +19,18 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
+func getOffset(from *int) int {
+	if from == nil {
+		return 1
+	}
+
+	if *from < 1 {
+		return 1
+	}
+
+	return *from
+}
+
 // Tests is the resolver for the tests field.
 func (r *assignmentResolver) Tests(ctx context.Context, obj *model.Assignment) ([]*model.Test, error) {
 	tests, err := r.DB.GetTestsForAssignment(obj.ID)
@@ -313,8 +325,8 @@ func (r *mutationResolver) Login(ctx context.Context, email string, password str
 }
 
 // Units is the resolver for the units field.
-func (r *queryResolver) Units(ctx context.Context) ([]*model.Unit, error) {
-	units, err := r.DB.GetAllUnits()
+func (r *queryResolver) Units(ctx context.Context, from *int) ([]*model.Unit, error) {
+	units, err := r.DB.GetAllUnits(getOffset(from))
 	if err != nil {
 		return nil, fmt.Errorf("error getting units: %w", err)
 	}
@@ -347,8 +359,8 @@ func (r *queryResolver) Unit(ctx context.Context, id string) (*model.Unit, error
 }
 
 // Classes is the resolver for the classes field.
-func (r *queryResolver) Classes(ctx context.Context) ([]*model.Class, error) {
-	classes, err := r.DB.GetAllClasses()
+func (r *queryResolver) Classes(ctx context.Context, from *int) ([]*model.Class, error) {
+	classes, err := r.DB.GetAllClasses(getOffset(from))
 	if err != nil {
 		return nil, fmt.Errorf("error getting classes: %w", err)
 	}
@@ -379,8 +391,8 @@ func (r *queryResolver) Class(ctx context.Context, id string) (*model.Class, err
 }
 
 // Assignments is the resolver for the assignments field.
-func (r *queryResolver) Assignments(ctx context.Context) ([]*model.Assignment, error) {
-	assignments, err := r.DB.GetAllAssignments()
+func (r *queryResolver) Assignments(ctx context.Context, from *int) ([]*model.Assignment, error) {
+	assignments, err := r.DB.GetAllAssignments(getOffset(from))
 	if err != nil {
 		return nil, fmt.Errorf("error getting assignments: %w", err)
 	}
@@ -416,8 +428,8 @@ func (r *queryResolver) Assignment(ctx context.Context, id string) (*model.Assig
 }
 
 // Tests is the resolver for the tests field.
-func (r *queryResolver) Tests(ctx context.Context) ([]*model.Test, error) {
-	tests, err := r.DB.GetAllTests()
+func (r *queryResolver) Tests(ctx context.Context, from *int) ([]*model.Test, error) {
+	tests, err := r.DB.GetAllTests(getOffset(from))
 	if err != nil {
 		return nil, fmt.Errorf("error getting tests: %w", err)
 	}
@@ -448,8 +460,8 @@ func (r *queryResolver) Test(ctx context.Context, id string) (*model.Test, error
 }
 
 // Submissions is the resolver for the submissions field.
-func (r *queryResolver) Submissions(ctx context.Context) ([]*model.Submission, error) {
-	submissions, err := r.DB.GetAllSubmissions()
+func (r *queryResolver) Submissions(ctx context.Context, from *int) ([]*model.Submission, error) {
+	submissions, err := r.DB.GetAllSubmissions(getOffset(from))
 	if err != nil {
 		return nil, fmt.Errorf("error getting submissions: %w", err)
 	}
@@ -480,8 +492,8 @@ func (r *queryResolver) Submission(ctx context.Context, id string) (*model.Submi
 }
 
 // Results is the resolver for the results field.
-func (r *queryResolver) Results(ctx context.Context) ([]*model.Result, error) {
-	results, err := r.DB.GetAllResults()
+func (r *queryResolver) Results(ctx context.Context, from *int) ([]*model.Result, error) {
+	results, err := r.DB.GetAllResults(getOffset(from))
 	if err != nil {
 		return nil, fmt.Errorf("error getting results: %w", err)
 	}

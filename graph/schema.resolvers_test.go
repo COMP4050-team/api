@@ -68,7 +68,7 @@ func TestUnitResolver(t *testing.T) {
 		mockDB := mocks.NewMockDatabase(ctrl)
 		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
 
-		mockDB.EXPECT().GetAllUnits().Return([]*models.Unit{
+		mockDB.EXPECT().GetAllUnits(1).Return([]*models.Unit{
 			{Model: gorm.Model{ID: 1}, Name: "COMP1000"},
 			{Model: gorm.Model{ID: 2}, Name: "COMP1010"},
 		}, nil)
@@ -92,7 +92,7 @@ func TestUnitResolver(t *testing.T) {
 		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
 
 		customErr := errors.New("custom error")
-		mockDB.EXPECT().GetAllUnits().Return([]*models.Unit{
+		mockDB.EXPECT().GetAllUnits(1).Return([]*models.Unit{
 			{Model: gorm.Model{ID: 1}, Name: "COMP1000"},
 			{Model: gorm.Model{ID: 2}, Name: "COMP1010"},
 		}, customErr)
@@ -214,7 +214,7 @@ func TestClassResolver(t *testing.T) {
 		mockDB := mocks.NewMockDatabase(ctrl)
 		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
 
-		mockDB.EXPECT().GetAllClasses().Return([]*models.Class{
+		mockDB.EXPECT().GetAllClasses(1).Return([]*models.Class{
 			{Model: gorm.Model{ID: 1}, Name: "Class 1", UnitID: 1},
 			{Model: gorm.Model{ID: 2}, Name: "Class 2", UnitID: 1},
 		}, nil)
@@ -307,7 +307,7 @@ func TestAssignmentResolver(t *testing.T) {
 
 		dueDate := time.Now().Add(time.Hour * 24 * 7)
 
-		mockDB.EXPECT().GetAllAssignments().Return([]*models.Assignment{
+		mockDB.EXPECT().GetAllAssignments(1).Return([]*models.Assignment{
 			{Model: gorm.Model{ID: 1}, Name: "Assignment 1", DueDate: dueDate, Tests: nil, Submissions: nil, ClassID: 1},
 			{Model: gorm.Model{ID: 2}, Name: "Assignment 2", DueDate: dueDate, Tests: nil, Submissions: nil, ClassID: 1},
 		}, nil)
@@ -403,7 +403,7 @@ func TestTestResolver(t *testing.T) {
 		mockDB := mocks.NewMockDatabase(ctrl)
 		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
 
-		mockDB.EXPECT().GetAllTests().Return([]*models.Test{
+		mockDB.EXPECT().GetAllTests(1).Return([]*models.Test{
 			{Model: gorm.Model{ID: 1}, Name: "Test 1", AssignmentID: 1},
 			{Model: gorm.Model{ID: 1}, Name: "Test 2", AssignmentID: 1},
 		}, nil)
@@ -489,7 +489,7 @@ func TestSubmissionResolver(t *testing.T) {
 		mockDB := mocks.NewMockDatabase(ctrl)
 		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
 
-		mockDB.EXPECT().GetAllSubmissions().Return([]*models.Submission{
+		mockDB.EXPECT().GetAllSubmissions(1).Return([]*models.Submission{
 			{Model: gorm.Model{ID: 1}, StudentID: "44444444", Result: models.Result{Model: gorm.Model{ID: 1}, Score: 99}, AssignmentID: 1},
 			{Model: gorm.Model{ID: 2}, StudentID: "44444445", Result: models.Result{Model: gorm.Model{ID: 2}, Score: 51}, AssignmentID: 1},
 		}, nil)
@@ -604,7 +604,7 @@ func TestResultResolver(t *testing.T) {
 
 		now := time.Now()
 
-		mockDB.EXPECT().GetAllResults().Return([]*models.Result{
+		mockDB.EXPECT().GetAllResults(1).Return([]*models.Result{
 			{Model: gorm.Model{ID: 1, CreatedAt: now}, Score: 99, SubmissionID: 1},
 			{Model: gorm.Model{ID: 2, CreatedAt: now}, Score: 51, SubmissionID: 2},
 		}, nil)

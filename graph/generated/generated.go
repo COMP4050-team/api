@@ -76,17 +76,17 @@ type ComplexityRoot struct {
 
 	Query struct {
 		Assignment  func(childComplexity int, id string) int
-		Assignments func(childComplexity int) int
+		Assignments func(childComplexity int, from *int) int
 		Class       func(childComplexity int, id string) int
-		Classes     func(childComplexity int) int
+		Classes     func(childComplexity int, from *int) int
 		Result      func(childComplexity int, id string) int
-		Results     func(childComplexity int) int
+		Results     func(childComplexity int, from *int) int
 		Submission  func(childComplexity int, id string) int
-		Submissions func(childComplexity int) int
+		Submissions func(childComplexity int, from *int) int
 		Test        func(childComplexity int, id string) int
-		Tests       func(childComplexity int) int
+		Tests       func(childComplexity int, from *int) int
 		Unit        func(childComplexity int, id string) int
-		Units       func(childComplexity int) int
+		Units       func(childComplexity int, from *int) int
 	}
 
 	Result struct {
@@ -133,17 +133,17 @@ type MutationResolver interface {
 	Login(ctx context.Context, email string, password string) (string, error)
 }
 type QueryResolver interface {
-	Units(ctx context.Context) ([]*model.Unit, error)
+	Units(ctx context.Context, from *int) ([]*model.Unit, error)
 	Unit(ctx context.Context, id string) (*model.Unit, error)
-	Classes(ctx context.Context) ([]*model.Class, error)
+	Classes(ctx context.Context, from *int) ([]*model.Class, error)
 	Class(ctx context.Context, id string) (*model.Class, error)
-	Assignments(ctx context.Context) ([]*model.Assignment, error)
+	Assignments(ctx context.Context, from *int) ([]*model.Assignment, error)
 	Assignment(ctx context.Context, id string) (*model.Assignment, error)
-	Tests(ctx context.Context) ([]*model.Test, error)
+	Tests(ctx context.Context, from *int) ([]*model.Test, error)
 	Test(ctx context.Context, id string) (*model.Test, error)
-	Submissions(ctx context.Context) ([]*model.Submission, error)
+	Submissions(ctx context.Context, from *int) ([]*model.Submission, error)
 	Submission(ctx context.Context, id string) (*model.Submission, error)
-	Results(ctx context.Context) ([]*model.Result, error)
+	Results(ctx context.Context, from *int) ([]*model.Result, error)
 	Result(ctx context.Context, id string) (*model.Result, error)
 }
 type SubmissionResolver interface {
@@ -344,7 +344,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.Assignments(childComplexity), true
+		args, err := ec.field_Query_assignments_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Assignments(childComplexity, args["from"].(*int)), true
 
 	case "Query.class":
 		if e.complexity.Query.Class == nil {
@@ -363,7 +368,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.Classes(childComplexity), true
+		args, err := ec.field_Query_classes_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Classes(childComplexity, args["from"].(*int)), true
 
 	case "Query.result":
 		if e.complexity.Query.Result == nil {
@@ -382,7 +392,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.Results(childComplexity), true
+		args, err := ec.field_Query_results_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Results(childComplexity, args["from"].(*int)), true
 
 	case "Query.submission":
 		if e.complexity.Query.Submission == nil {
@@ -401,7 +416,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.Submissions(childComplexity), true
+		args, err := ec.field_Query_submissions_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Submissions(childComplexity, args["from"].(*int)), true
 
 	case "Query.test":
 		if e.complexity.Query.Test == nil {
@@ -420,7 +440,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.Tests(childComplexity), true
+		args, err := ec.field_Query_tests_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Tests(childComplexity, args["from"].(*int)), true
 
 	case "Query.unit":
 		if e.complexity.Query.Unit == nil {
@@ -439,7 +464,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.Units(childComplexity), true
+		args, err := ec.field_Query_units_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Units(childComplexity, args["from"].(*int)), true
 
 	case "Result.date":
 		if e.complexity.Result.Date == nil {
@@ -686,27 +716,27 @@ type Result {
 ## Queries ##
 type Query {
   # Get all units
-  units: [Unit!]!
+  units(from: Int): [Unit!]!
   # Get a unit by id
   unit(id: ID!): Unit
   # Get all classes
-  classes: [Class!]!
+  classes(from: Int): [Class!]!
   # Get a class by id
   class(id: ID!): Class
   # Get all assignments
-  assignments: [Assignment!]!
+  assignments(from: Int): [Assignment!]!
   # Get an assignment by id
   assignment(id: ID!): Assignment
   # Get all tests
-  tests: [Test!]!
+  tests(from: Int): [Test!]!
   # Get a test by id
   test(id: ID!): Test
   # Get all submissions
-  submissions: [Submission!]!
+  submissions(from: Int): [Submission!]!
   # Get a submission by id
   submission(id: ID!): Submission
   # Get all results
-  results: [Result!]!
+  results(from: Int): [Result!]!
   # Get a result by id
   result(id: ID!): Result
 }
@@ -899,6 +929,21 @@ func (ec *executionContext) field_Query_assignment_args(ctx context.Context, raw
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_assignments_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *int
+	if tmp, ok := rawArgs["from"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("from"))
+		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["from"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_class_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -911,6 +956,21 @@ func (ec *executionContext) field_Query_class_args(ctx context.Context, rawArgs 
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_classes_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *int
+	if tmp, ok := rawArgs["from"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("from"))
+		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["from"] = arg0
 	return args, nil
 }
 
@@ -929,6 +989,21 @@ func (ec *executionContext) field_Query_result_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_results_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *int
+	if tmp, ok := rawArgs["from"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("from"))
+		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["from"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_submission_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -941,6 +1016,21 @@ func (ec *executionContext) field_Query_submission_args(ctx context.Context, raw
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_submissions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *int
+	if tmp, ok := rawArgs["from"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("from"))
+		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["from"] = arg0
 	return args, nil
 }
 
@@ -959,6 +1049,21 @@ func (ec *executionContext) field_Query_test_args(ctx context.Context, rawArgs m
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_tests_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *int
+	if tmp, ok := rawArgs["from"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("from"))
+		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["from"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_unit_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -971,6 +1076,21 @@ func (ec *executionContext) field_Query_unit_args(ctx context.Context, rawArgs m
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_units_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *int
+	if tmp, ok := rawArgs["from"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("from"))
+		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["from"] = arg0
 	return args, nil
 }
 
@@ -1936,7 +2056,7 @@ func (ec *executionContext) _Query_units(ctx context.Context, field graphql.Coll
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Units(rctx)
+		return ec.resolvers.Query().Units(rctx, fc.Args["from"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1970,6 +2090,17 @@ func (ec *executionContext) fieldContext_Query_units(ctx context.Context, field 
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Unit", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_units_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -2048,7 +2179,7 @@ func (ec *executionContext) _Query_classes(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Classes(rctx)
+		return ec.resolvers.Query().Classes(rctx, fc.Args["from"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2084,6 +2215,17 @@ func (ec *executionContext) fieldContext_Query_classes(ctx context.Context, fiel
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Class", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_classes_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -2164,7 +2306,7 @@ func (ec *executionContext) _Query_assignments(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Assignments(rctx)
+		return ec.resolvers.Query().Assignments(rctx, fc.Args["from"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2202,6 +2344,17 @@ func (ec *executionContext) fieldContext_Query_assignments(ctx context.Context, 
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Assignment", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_assignments_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -2284,7 +2437,7 @@ func (ec *executionContext) _Query_tests(ctx context.Context, field graphql.Coll
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Tests(rctx)
+		return ec.resolvers.Query().Tests(rctx, fc.Args["from"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2318,6 +2471,17 @@ func (ec *executionContext) fieldContext_Query_tests(ctx context.Context, field 
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Test", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_tests_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -2396,7 +2560,7 @@ func (ec *executionContext) _Query_submissions(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Submissions(rctx)
+		return ec.resolvers.Query().Submissions(rctx, fc.Args["from"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2430,6 +2594,17 @@ func (ec *executionContext) fieldContext_Query_submissions(ctx context.Context, 
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Submission", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_submissions_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -2508,7 +2683,7 @@ func (ec *executionContext) _Query_results(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Results(rctx)
+		return ec.resolvers.Query().Results(rctx, fc.Args["from"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2544,6 +2719,17 @@ func (ec *executionContext) fieldContext_Query_results(ctx context.Context, fiel
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Result", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_results_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -7104,6 +7290,22 @@ func (ec *executionContext) marshalOClass2ᚖgithubᚗcomᚋCOMP4050ᚋsquareᚑ
 		return graphql.Null
 	}
 	return ec._Class(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalInt(*v)
+	return res
 }
 
 func (ec *executionContext) marshalOResult2ᚖgithubᚗcomᚋCOMP4050ᚋsquareᚑteamᚑ5ᚋapiᚋgraphᚋmodelᚐResult(ctx context.Context, sel ast.SelectionSet, v *model.Result) graphql.Marshaler {
