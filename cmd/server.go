@@ -40,7 +40,7 @@ func main() {
 		AllowCredentials: true,
 		AllowHeaders:     []string{"Content-Type", "Authorization"},
 	}))
-	r.Use(auth.AuthHandler())
+	r.Use(auth.AuthHandler(config.JWTSecret))
 
 	r.Any("/", gin.WrapH(playground.Handler("GraphQL playground", "/query")))
 	r.POST("/query", gin.WrapH(srv))
