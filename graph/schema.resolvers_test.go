@@ -1,6 +1,7 @@
 package graph
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"testing"
@@ -19,6 +20,24 @@ import (
 	"github.com/COMP4050/square-team-5/api/internal/pkg/db"
 	"github.com/COMP4050/square-team-5/api/internal/pkg/db/models"
 )
+
+func newClient(mockDB *mocks.MockDatabase, authenticated bool) *client.Client {
+	var user *models.User
+	if authenticated {
+		user = &models.User{Email: "user@example.com"}
+	}
+
+	return client.New(
+		handler.NewDefaultServer(
+			generated.NewExecutableSchema(
+				generated.Config{Resolvers: &Resolver{
+					DB:          mockDB,
+					ExtractUser: func(ctx context.Context) *models.User { return user }},
+				},
+			),
+		),
+	)
+}
 
 func TestRootResolver(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -41,7 +60,7 @@ func TestUnitResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().GetUnitByID("1", false).Return(&models.Unit{Model: gorm.Model{ID: 1}, Name: "COMP1000"}, nil)
 		mockDB.EXPECT().GetUnitByID("1", true).Return(&models.Unit{Model: gorm.Model{ID: 1}, Name: "COMP1000",
@@ -66,7 +85,7 @@ func TestUnitResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().GetAllUnits(1).Return([]*models.Unit{
 			{Model: gorm.Model{ID: 1}, Name: "COMP1000"},
@@ -89,7 +108,7 @@ func TestUnitResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		customErr := errors.New("custom error")
 		mockDB.EXPECT().GetAllUnits(1).Return([]*models.Unit{
@@ -112,7 +131,7 @@ func TestUnitResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().GetUnitByID("1", false).Return(nil, db.ErrRecordNotFound)
 
@@ -130,7 +149,7 @@ func TestUnitResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().GetUnitByName("COMP1000").Return(nil, db.ErrRecordNotFound)
 		mockDB.EXPECT().CreateUnit("COMP1000").Return(&models.Unit{Model: gorm.Model{ID: 1}, Name: "COMP1000"}, nil)
@@ -149,7 +168,7 @@ func TestUnitResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().GetUnitByName("COMP1000").Return(&models.Unit{Model: gorm.Model{ID: 1}, Name: "COMP1000"}, nil)
 
@@ -167,10 +186,9 @@ func TestUnitResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().GetUnitByName("COMP1000").Return(&models.Unit{Model: gorm.Model{ID: 1}, Name: "COMP1000"}, fmt.Errorf("error"))
-		// mockDB.EXPECT().CreateUnit("COMP1000").Return(&models.Unit{Model: gorm.Model{ID: 1}, Name: "COMP1000"}, nil)
 
 		var resp struct {
 			CreateUnit struct{ ID, Name string }
@@ -178,6 +196,22 @@ func TestUnitResolver(t *testing.T) {
 		err := c.Post(`mutation { createUnit(input: {name: "COMP1000"}) { id name } }`, &resp)
 
 		assert.ErrorContains(t, err, "error getting unit: error")
+		assert.NotEqual(t, "1", resp.CreateUnit.ID)
+	})
+
+	t.Run("Create Unit - Unauthenticated", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := newClient(mockDB, false)
+
+		var resp struct {
+			CreateUnit struct{ ID, Name string }
+		}
+		err := c.Post(`mutation { createUnit(input: {name: "COMP1000"}) { id name } }`, &resp)
+
+		assert.ErrorContains(t, err, "user not authenticated")
 		assert.NotEqual(t, "1", resp.CreateUnit.ID)
 	})
 }
@@ -190,7 +224,7 @@ func TestClassResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().GetClass("1").Return(&models.Class{Model: gorm.Model{ID: 1}, Name: "Class 1"}, nil)
 		mockDB.EXPECT().GetAssignmentsForClass(uint(1)).Return([]*models.Assignment{{Model: gorm.Model{ID: 1}, Name: "Assignment 1"}}, nil)
@@ -212,7 +246,7 @@ func TestClassResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().GetAllClasses(1).Return([]*models.Class{
 			{Model: gorm.Model{ID: 1}, Name: "Class 1", UnitID: 1},
@@ -244,7 +278,7 @@ func TestClassResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().GetClass("1").Return(nil, db.ErrRecordNotFound)
 
@@ -262,7 +296,7 @@ func TestClassResolver(t *testing.T) {
 		ctrl := gomock.NewController(t)
 
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().GetUnitByID("1", false).Return(&models.Unit{Model: gorm.Model{ID: 1}, Name: "COMP1000"}, nil)
 		mockDB.EXPECT().CreateClass("Class 1", uint(1)).Return(&models.Class{Model: gorm.Model{ID: 1}, Name: "Class 1"}, nil)
@@ -275,6 +309,21 @@ func TestClassResolver(t *testing.T) {
 		assert.Equal(t, "1", resp.CreateClass.ID)
 		assert.Equal(t, "Class 1", resp.CreateClass.Name)
 	})
+
+	t.Run("Create Class - Unauthenticated", func(t *testing.T) {
+		t.Parallel()
+		ctrl := gomock.NewController(t)
+
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := newClient(mockDB, false)
+
+		var resp struct {
+			CreateClass struct{ ID, Name string }
+		}
+		err := c.Post(`mutation { createClass(input: {name: "Class 1", unitID: "1"}) { id name } }`, &resp)
+
+		assert.ErrorContains(t, err, "user not authenticated")
+	})
 }
 
 func TestAssignmentResolver(t *testing.T) {
@@ -285,7 +334,7 @@ func TestAssignmentResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().GetAssignment("1").Return(&models.Assignment{Model: gorm.Model{ID: 1}, Name: "Assignment 1"}, nil)
 
@@ -303,7 +352,7 @@ func TestAssignmentResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		dueDate := time.Now().Add(time.Hour * 24 * 7)
 
@@ -343,7 +392,7 @@ func TestAssignmentResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().GetAssignment("1").Return(nil, db.ErrRecordNotFound)
 
@@ -361,7 +410,7 @@ func TestAssignmentResolver(t *testing.T) {
 		ctrl := gomock.NewController(t)
 
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().CreateAssignment("Assignment 1", 1660657596, uint(1)).Return(&models.Assignment{Model: gorm.Model{ID: 1}, Name: "Assignment 1"}, nil)
 
@@ -373,6 +422,21 @@ func TestAssignmentResolver(t *testing.T) {
 		assert.Equal(t, "1", resp.CreateAssignment.ID)
 		assert.Equal(t, "Assignment 1", resp.CreateAssignment.Name)
 	})
+
+	t.Run("Create Assignment - Unauthenticated", func(t *testing.T) {
+		t.Parallel()
+		ctrl := gomock.NewController(t)
+
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := newClient(mockDB, false)
+
+		var resp struct {
+			CreateAssignment struct{ ID, Name string }
+		}
+		err := c.Post(`mutation { createAssignment(input: {name: "Assignment 1", dueDate: 1660657596, classID: "1"}) { id name } }`, &resp)
+
+		assert.ErrorContains(t, err, "user not authenticated")
+	})
 }
 
 func TestTestResolver(t *testing.T) {
@@ -383,7 +447,7 @@ func TestTestResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().GetTest("1").Return(&models.Test{Model: gorm.Model{ID: 1}, Name: "Test 1"}, nil)
 
@@ -401,7 +465,7 @@ func TestTestResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().GetAllTests(1).Return([]*models.Test{
 			{Model: gorm.Model{ID: 1}, Name: "Test 1", AssignmentID: 1},
@@ -428,7 +492,7 @@ func TestTestResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().GetTest("1").Return(nil, db.ErrRecordNotFound)
 
@@ -446,7 +510,7 @@ func TestTestResolver(t *testing.T) {
 		ctrl := gomock.NewController(t)
 
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		// Storage path here is tests/{assignmentID}/test_{testID}.java
 		mockDB.EXPECT().CreateTest("Test 1", "tests/1/test_1.java", uint(1)).Return(&models.Test{Model: gorm.Model{ID: 1}, Name: "Test 1"}, nil)
@@ -459,6 +523,21 @@ func TestTestResolver(t *testing.T) {
 		assert.Equal(t, "1", resp.CreateTest.ID)
 		assert.Equal(t, "Test 1", resp.CreateTest.Name)
 	})
+
+	t.Run("Create Test - Unauthenticated", func(t *testing.T) {
+		t.Parallel()
+		ctrl := gomock.NewController(t)
+
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := newClient(mockDB, false)
+
+		var resp struct {
+			CreateTest struct{ ID, Name string }
+		}
+		err := c.Post(`mutation { createTest(input: {name: "Test 1", storagePath: "tests/1/test_1.java",assignmentID: "1"}) { id name } }`, &resp)
+
+		assert.ErrorContains(t, err, "user not authenticated")
+	})
 }
 
 func TestSubmissionResolver(t *testing.T) {
@@ -469,7 +548,7 @@ func TestSubmissionResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().GetSubmission("1").Return(&models.Submission{Model: gorm.Model{ID: 1}, StudentID: "44444444"}, nil)
 
@@ -487,7 +566,7 @@ func TestSubmissionResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().GetAllSubmissions(1).Return([]*models.Submission{
 			{Model: gorm.Model{ID: 1}, StudentID: "44444444", Result: models.Result{Model: gorm.Model{ID: 1}, Score: 99}, AssignmentID: 1},
@@ -533,7 +612,7 @@ func TestSubmissionResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().GetSubmission("1").Return(nil, db.ErrRecordNotFound)
 
@@ -551,7 +630,7 @@ func TestSubmissionResolver(t *testing.T) {
 		ctrl := gomock.NewController(t)
 
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().CreateSubmission("44444444", uint(1)).Return(&models.Submission{Model: gorm.Model{ID: 1}, StudentID: "44444444"}, nil)
 
@@ -562,6 +641,21 @@ func TestSubmissionResolver(t *testing.T) {
 
 		assert.Equal(t, "1", resp.CreateSubmission.ID)
 		assert.Equal(t, "44444444", resp.CreateSubmission.StudentID)
+	})
+
+	t.Run("Create Submission - Unauthenticated", func(t *testing.T) {
+		t.Parallel()
+		ctrl := gomock.NewController(t)
+
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := newClient(mockDB, false)
+
+		var resp struct {
+			CreateSubmission struct{ ID, StudentID string }
+		}
+		err := c.Post(`mutation { createSubmission(input: {studentID: "44444444", assignmentID: "1"}) { id studentID} }`, &resp)
+
+		assert.ErrorContains(t, err, "user not authenticated")
 	})
 }
 
@@ -582,7 +676,7 @@ func TestResultResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().GetResult("1").Return(&models.Result{Model: gorm.Model{ID: 1, CreatedAt: now}, Score: 99, SubmissionID: 1}, nil)
 
@@ -600,7 +694,7 @@ func TestResultResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		now := time.Now()
 
@@ -632,7 +726,7 @@ func TestResultResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().GetResult("1").Return(nil, db.ErrRecordNotFound)
 
@@ -657,7 +751,7 @@ func TestRegisterResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().GetUserByEmail("a@b.com").Return(nil, db.ErrRecordNotFound)
 		mockDB.EXPECT().CreateUser("a@b.com", gomock.Any(), models.UserRoleAdmin).Return(user, nil)
@@ -672,7 +766,7 @@ func TestRegisterResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().GetUserByEmail("a@b.com").Return(nil, db.ErrRecordNotFound)
 		mockDB.EXPECT().CreateUser("a@b.com", gomock.Any(), models.UserRoleAdmin).Return(user, nil)
@@ -688,7 +782,7 @@ func TestRegisterResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		err := c.Post(`mutation { register(email:"", password: "password") }`, &resp)
 		assert.Error(t, err)
@@ -699,7 +793,7 @@ func TestRegisterResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		err := c.Post(`mutation { register(email:"a@b.com", password: "") }`, &resp)
 		assert.Error(t, err)
@@ -710,7 +804,7 @@ func TestRegisterResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		customErr := errors.New("my cool error")
 		mockDB.EXPECT().GetUserByEmail("a@b.com").Return(nil, customErr)
@@ -725,7 +819,7 @@ func TestRegisterResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		customErr := errors.New("my cool error")
 		mockDB.EXPECT().GetUserByEmail("a@b.com").Return(nil, db.ErrRecordNotFound)
@@ -741,7 +835,7 @@ func TestRegisterResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().GetUserByEmail("a@b.com").Return(nil, db.ErrRecordNotFound)
 		mockDB.EXPECT().CreateUser("a@b.com", gomock.Any(), models.UserRoleAdmin).Return(nil, nil)
@@ -766,7 +860,7 @@ func TestLoginResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().GetUserByEmail("a@b.com").Return(user, nil)
 
@@ -780,7 +874,7 @@ func TestLoginResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		err := c.Post(`mutation { login(email:"", password: "password") }`, &resp)
 		assert.Error(t, err)
@@ -791,7 +885,7 @@ func TestLoginResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		err := c.Post(`mutation { login(email:"a@b.com", password: "") }`, &resp)
 		assert.Error(t, err)
@@ -802,7 +896,7 @@ func TestLoginResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().GetUserByEmail("a@b.com").Return(nil, db.ErrRecordNotFound)
 
@@ -815,7 +909,7 @@ func TestLoginResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().GetUserByEmail("a@b.com").Return(nil, nil)
 
@@ -828,7 +922,7 @@ func TestLoginResolver(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		mockDB := mocks.NewMockDatabase(ctrl)
-		c := client.New(handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &Resolver{DB: mockDB}})))
+		c := newClient(mockDB, true)
 
 		mockDB.EXPECT().GetUserByEmail("a@b.com").Return(user, nil)
 
