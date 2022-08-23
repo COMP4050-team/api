@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -16,6 +17,10 @@ import (
 	"github.com/COMP4050/square-team-5/api/internal/pkg/web/auth"
 )
 
+func allowedOrigin(origin string) bool {
+	return regexp.MustCompile(`^(?:https:\/\/.*\.vercel\.app)|(?:http:\/\/localhost:3000)$`).MatchString(origin)
+}
+
 func main() {
 	config := config.NewConfig()
 
@@ -25,7 +30,7 @@ func main() {
 
 	r := gin.New()
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000", "https://*.vercel.app"},
+		AllowOriginFunc:  allowedOrigin,
 		AllowCredentials: true,
 		AllowHeaders:     []string{"Content-Type"},
 	}))
