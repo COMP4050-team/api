@@ -10,4 +10,4 @@ coverage:
 	go tool cover -html=cover.out
 
 run:
-	go run ./... -jwt-secret catjam
+	go run ./... -jwt-secret catjam -port 8081
