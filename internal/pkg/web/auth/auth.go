@@ -41,14 +41,14 @@ func getUserFromJWT(tokenString, secret string) (string, error) {
 	}
 }
 
-func AuthHandler() gin.HandlerFunc {
+func AuthHandler(jwtSecret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		jwt, err := c.Cookie("token")
-		if err != nil || jwt == "" {
+		jwt := c.GetHeader("Authorization")
+		if jwt == "" {
 			return
 		}
 
-		username, err := getUserFromJWT(jwt, "catjam")
+		username, err := getUserFromJWT(jwt, jwtSecret)
 		if err != nil {
 			c.AbortWithError(500, err)
 			return

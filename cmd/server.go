@@ -38,9 +38,9 @@ func main() {
 	r.Use(cors.New(cors.Config{
 		AllowOriginFunc:  allowedOrigin,
 		AllowCredentials: true,
-		AllowHeaders:     []string{"Content-Type"},
+		AllowHeaders:     []string{"Content-Type", "Authorization"},
 	}))
-	r.Use(auth.AuthHandler())
+	r.Use(auth.AuthHandler(config.JWTSecret))
 
 	r.Any("/", gin.WrapH(playground.Handler("GraphQL playground", "/query")))
 	r.POST("/query", gin.WrapH(srv))
