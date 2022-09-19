@@ -3,7 +3,7 @@ module github.com/COMP4050/square-team-5/api
 go 1.18
 
 require (
-	github.com/99designs/gqlgen v0.17.16
+	github.com/99designs/gqlgen v0.17.19
 	github.com/gin-contrib/cors v1.4.0
 	github.com/golang/mock v1.6.0
 	github.com/stretchr/testify v1.8.0
