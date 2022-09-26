@@ -1,22 +1,15 @@
-# fly.toml file generated for comp4050-square-api on 2022-07-26T23:39:32+10:00
+# fly.toml file generated for comp4050-square-api on 2022-09-26T21:06:34+10:00
 
 app = "comp4050-square-api"
 kill_signal = "SIGINT"
 kill_timeout = 5
 processes = []
 
-[build]
-  builder = "paketobuildpacks/builder:base"
-  buildpacks = ["gcr.io/paketo-buildpacks/go"]
-
-[build.args]
-  BP_GO_TARGETS="./cmd"
-
 [env]
   PORT = "8080"
 
 [mount]
-  source="myapp_data"
+  source="data"
   destination="/app/data"
 
 [experimental]
