@@ -81,3 +81,7 @@ models:
     fields:
       result:
         resolver: true
+  Test:
+    fields:
+      unitID:
+        resolver: true
