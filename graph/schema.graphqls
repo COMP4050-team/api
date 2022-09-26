@@ -28,6 +28,8 @@ input NewClass {
 
 type Assignment {
   id: ID!
+  classID: ID!
+  unitID: ID!
   name: String!
   dueDate: Int!
   tests: [Test!]!

@@ -19,6 +19,22 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
+// UnitID is the resolver for the unitID field.
+func (r *assignmentResolver) UnitID(ctx context.Context, obj *model.Assignment) (string, error) {
+	assignment, err := r.DB.GetAssignment(obj.ID)
+	if err != nil {
+		return "", err
+	}
+
+	// Get the Unit ID via the Class ID
+	class, err := r.DB.GetClass(fmt.Sprintf("%d", assignment.ClassID))
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%d", class.UnitID), nil
+}
+
 // Tests is the resolver for the tests field.
 func (r *assignmentResolver) Tests(ctx context.Context, obj *model.Assignment) ([]*model.Test, error) {
 	tests, err := r.DB.GetTestsForAssignment(obj.ID)
@@ -462,7 +478,7 @@ func (r *queryResolver) Assignment(ctx context.Context, id string) (*model.Assig
 		return nil, nil
 	}
 
-	return &model.Assignment{ID: id, Name: assignment.Name}, nil
+	return &model.Assignment{ID: id, Name: assignment.Name, ClassID: fmt.Sprintf("%d", assignment.ClassID)}, nil
 }
 
 // Tests is the resolver for the tests field.

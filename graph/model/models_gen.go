@@ -4,6 +4,8 @@ package model
 
 type Assignment struct {
 	ID          string        `json:"id"`
+	ClassID     string        `json:"classID"`
+	UnitID      string        `json:"unitID"`
 	Name        string        `json:"name"`
 	DueDate     int           `json:"dueDate"`
 	Tests       []*Test       `json:"tests"`

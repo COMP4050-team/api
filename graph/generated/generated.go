@@ -49,11 +49,13 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Assignment struct {
+		ClassID     func(childComplexity int) int
 		DueDate     func(childComplexity int) int
 		ID          func(childComplexity int) int
 		Name        func(childComplexity int) int
 		Submissions func(childComplexity int) int
 		Tests       func(childComplexity int) int
+		UnitID      func(childComplexity int) int
 	}
 
 	Class struct {
@@ -117,6 +119,8 @@ type ComplexityRoot struct {
 }
 
 type AssignmentResolver interface {
+	UnitID(ctx context.Context, obj *model.Assignment) (string, error)
+
 	Tests(ctx context.Context, obj *model.Assignment) ([]*model.Test, error)
 	Submissions(ctx context.Context, obj *model.Assignment) ([]*model.Submission, error)
 }
@@ -170,6 +174,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
+	case "Assignment.classID":
+		if e.complexity.Assignment.ClassID == nil {
+			break
+		}
+
+		return e.complexity.Assignment.ClassID(childComplexity), true
+
 	case "Assignment.dueDate":
 		if e.complexity.Assignment.DueDate == nil {
 			break
@@ -204,6 +215,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Assignment.Tests(childComplexity), true
+
+	case "Assignment.unitID":
+		if e.complexity.Assignment.UnitID == nil {
+			break
+		}
+
+		return e.complexity.Assignment.UnitID(childComplexity), true
 
 	case "Class.assignments":
 		if e.complexity.Class.Assignments == nil {
@@ -674,6 +692,8 @@ input NewClass {
 
 type Assignment {
   id: ID!
+  classID: ID!
+  unitID: ID!
   name: String!
   dueDate: Int!
   tests: [Test!]!
@@ -1188,6 +1208,94 @@ func (ec *executionContext) fieldContext_Assignment_id(ctx context.Context, fiel
 	return fc, nil
 }
 
+func (ec *executionContext) _Assignment_classID(ctx context.Context, field graphql.CollectedField, obj *model.Assignment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Assignment_classID(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ClassID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Assignment_classID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Assignment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Assignment_unitID(ctx context.Context, field graphql.CollectedField, obj *model.Assignment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Assignment_unitID(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Assignment().UnitID(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Assignment_unitID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Assignment",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Assignment_name(ctx context.Context, field graphql.CollectedField, obj *model.Assignment) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Assignment_name(ctx, field)
 	if err != nil {
@@ -1553,6 +1661,10 @@ func (ec *executionContext) fieldContext_Class_assignments(ctx context.Context, 
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Assignment_id(ctx, field)
+			case "classID":
+				return ec.fieldContext_Assignment_classID(ctx, field)
+			case "unitID":
+				return ec.fieldContext_Assignment_unitID(ctx, field)
 			case "name":
 				return ec.fieldContext_Assignment_name(ctx, field)
 			case "dueDate":
@@ -1737,6 +1849,10 @@ func (ec *executionContext) fieldContext_Mutation_createAssignment(ctx context.C
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Assignment_id(ctx, field)
+			case "classID":
+				return ec.fieldContext_Assignment_classID(ctx, field)
+			case "unitID":
+				return ec.fieldContext_Assignment_unitID(ctx, field)
 			case "name":
 				return ec.fieldContext_Assignment_name(ctx, field)
 			case "dueDate":
@@ -2389,6 +2505,10 @@ func (ec *executionContext) fieldContext_Query_assignments(ctx context.Context, 
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Assignment_id(ctx, field)
+			case "classID":
+				return ec.fieldContext_Assignment_classID(ctx, field)
+			case "unitID":
+				return ec.fieldContext_Assignment_unitID(ctx, field)
 			case "name":
 				return ec.fieldContext_Assignment_name(ctx, field)
 			case "dueDate":
@@ -2453,6 +2573,10 @@ func (ec *executionContext) fieldContext_Query_assignment(ctx context.Context, f
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Assignment_id(ctx, field)
+			case "classID":
+				return ec.fieldContext_Assignment_classID(ctx, field)
+			case "unitID":
+				return ec.fieldContext_Assignment_unitID(ctx, field)
 			case "name":
 				return ec.fieldContext_Assignment_name(ctx, field)
 			case "dueDate":
@@ -5559,6 +5683,33 @@ func (ec *executionContext) _Assignment(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "classID":
+
+			out.Values[i] = ec._Assignment_classID(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "unitID":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Assignment_unitID(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "name":
 
 			out.Values[i] = ec._Assignment_name(ctx, field, obj)
