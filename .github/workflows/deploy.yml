@@ -1,4 +1,4 @@
-name: Test and Deploy API to dev
+name: Test and Deploy API to Production
 
 on: workflow_dispatch
     
@@ -37,7 +37,7 @@ jobs:
       name: Deploy App
       needs: build-and-test
       environment: 
-        name: dev
+        name: Production
         url: https://comp4050-square-api.fly.dev
       runs-on: ubuntu-latest
       steps:
