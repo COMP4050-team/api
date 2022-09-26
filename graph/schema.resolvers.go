@@ -239,8 +239,44 @@ func (r *mutationResolver) RunTest(ctx context.Context, testID string) (bool, er
 		return false, fmt.Errorf("user not authenticated")
 	}
 
+	test, err := r.DB.GetTest(testID)
+	if err != nil {
+		return false, fmt.Errorf("error getting test: %w", err)
+	}
+	if test == nil {
+		return false, fmt.Errorf("test with id: %s does not exist", testID)
+	}
+
+	// Get assignment of test
+	assignment, err := r.DB.GetAssignment(fmt.Sprintf("%d", test.AssignmentID))
+	if err != nil {
+		return false, fmt.Errorf("error getting assignment: %w", err)
+	}
+	if assignment == nil {
+		return false, fmt.Errorf("assignment with id: %d does not exist", test.AssignmentID)
+	}
+
+	// Get class of assignment
+	class, err := r.DB.GetClass(fmt.Sprintf("%d", assignment.ClassID))
+	if err != nil {
+		return false, fmt.Errorf("error getting class: %w", err)
+	}
+	if class == nil {
+		return false, fmt.Errorf("class with id: %d does not exist", assignment.ClassID)
+	}
+
+	// Get unit name of test
+	unit, err := r.DB.GetUnitByID(fmt.Sprintf("%d", class.UnitID), false)
+	if err != nil {
+		return false, fmt.Errorf("error getting unit: %w", err)
+	}
+	if unit == nil {
+		return false, fmt.Errorf("unit with id: %d does not exist", class.UnitID)
+	}
+
 	body := map[string]string{
-		"s3Key": fmt.Sprintf("tests/test_%s.java", testID),
+		"s3KeyTestFile":    fmt.Sprintf("%s/%s/Tests/Test.java", unit.Name, assignment.Name),
+		"s3KeyProjectFile": fmt.Sprintf("%s/%s/Projects/", unit.Name, assignment.Name),
 	}
 
 	json, err := json.Marshal(body)
