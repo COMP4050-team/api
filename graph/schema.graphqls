@@ -48,6 +48,7 @@ type Test {
   id: ID!
   name: String!
   assignmentID: String!
+  unitID: String!
 }
 
 input NewTest {

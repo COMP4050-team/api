@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -18,9 +20,14 @@ import (
 	"github.com/COMP4050/square-team-5/api/fixtures/mocks"
 	"github.com/COMP4050/square-team-5/api/graph/generated"
 	"github.com/COMP4050/square-team-5/api/graph/model"
+	"github.com/COMP4050/square-team-5/api/internal/pkg/config"
 	"github.com/COMP4050/square-team-5/api/internal/pkg/db"
 	"github.com/COMP4050/square-team-5/api/internal/pkg/db/models"
 )
+
+func mockHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+}
 
 func newClient(mockDB *mocks.MockDatabase, authenticated bool) *client.Client {
 	var user *models.User
@@ -28,12 +35,23 @@ func newClient(mockDB *mocks.MockDatabase, authenticated bool) *client.Client {
 		user = &models.User{Email: "user@example.com"}
 	}
 
+	// New mock http server
+	srv := httptest.NewServer(http.HandlerFunc(mockHandler))
+
+	newConfig := config.Config{
+		JWTSecret:            "secret",
+		TestExecutorEndpoint: srv.URL,
+		DBFilePath:           "test.sqlite3",
+	}
+
 	return client.New(
 		handler.NewDefaultServer(
 			generated.NewExecutableSchema(
 				generated.Config{Resolvers: &Resolver{
 					DB:          mockDB,
-					ExtractUser: func(ctx context.Context) *models.User { return user }},
+					ExtractUser: func(ctx context.Context) *models.User { return user },
+					Config:      newConfig,
+				},
 				},
 			),
 		),
@@ -939,8 +957,6 @@ func TestResetDBMutation(t *testing.T) {
 		ResetDB bool
 	}
 
-	// user := &models.User{Model: gorm.Model{ID: 1}, Email: "a@b.com", PasswordHash: "$2y$10$iVyaKJWb4LzkbCMNKl6biuNQNdBG1WSsn3/cMkg3VHg5RSpQTJW0K"}
-
 	t.Run("Reset DB", func(t *testing.T) {
 		t.Parallel()
 
@@ -967,5 +983,28 @@ func TestResetDBMutation(t *testing.T) {
 		require.Error(t, err)
 
 		assert.False(t, resp.ResetDB)
+	})
+}
+
+func TestRunTestMutation(t *testing.T) {
+	var resp struct {
+		RunTest bool
+	}
+
+	t.Run("Run Test", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := newClient(mockDB, true)
+
+		mockDB.EXPECT().GetTest("1").Return(&models.Test{Model: gorm.Model{ID: 1}, Name: "Test 1", AssignmentID: 1}, nil)
+		mockDB.EXPECT().GetAssignment("1").Return(&models.Assignment{Model: gorm.Model{ID: 1}, Name: "Assignment 1", ClassID: 1}, nil)
+		mockDB.EXPECT().GetClass("1").Return(&models.Class{Model: gorm.Model{ID: 1}, Name: "Class 1", UnitID: 1}, nil)
+		mockDB.EXPECT().GetUnitByID("1", false).Return(&models.Unit{Model: gorm.Model{ID: 1}, Name: "COMP1000"}, nil)
+
+		c.MustPost(`mutation { runTest(testID: "1") }`, &resp)
+
+		assert.True(t, resp.RunTest)
 	})
 }

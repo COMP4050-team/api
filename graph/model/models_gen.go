@@ -62,6 +62,7 @@ type Test struct {
 	ID           string `json:"id"`
 	Name         string `json:"name"`
 	AssignmentID string `json:"assignmentID"`
+	UnitID       string `json:"unitID"`
 }
 
 type Unit struct {

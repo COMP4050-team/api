@@ -41,6 +41,7 @@ type ResolverRoot interface {
 	Mutation() MutationResolver
 	Query() QueryResolver
 	Submission() SubmissionResolver
+	Test() TestResolver
 	Unit() UnitResolver
 }
 
@@ -109,6 +110,7 @@ type ComplexityRoot struct {
 		AssignmentID func(childComplexity int) int
 		ID           func(childComplexity int) int
 		Name         func(childComplexity int) int
+		UnitID       func(childComplexity int) int
 	}
 
 	Unit struct {
@@ -154,6 +156,9 @@ type QueryResolver interface {
 }
 type SubmissionResolver interface {
 	Result(ctx context.Context, obj *model.Submission) (*model.Result, error)
+}
+type TestResolver interface {
+	UnitID(ctx context.Context, obj *model.Test) (string, error)
 }
 type UnitResolver interface {
 	Classes(ctx context.Context, obj *model.Unit) ([]*model.Class, error)
@@ -568,6 +573,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Test.Name(childComplexity), true
 
+	case "Test.unitID":
+		if e.complexity.Test.UnitID == nil {
+			break
+		}
+
+		return e.complexity.Test.UnitID(childComplexity), true
+
 	case "Unit.classes":
 		if e.complexity.Unit.Classes == nil {
 			break
@@ -712,6 +724,7 @@ type Test {
   id: ID!
   name: String!
   assignmentID: String!
+  unitID: String!
 }
 
 input NewTest {
@@ -1429,6 +1442,8 @@ func (ec *executionContext) fieldContext_Assignment_tests(ctx context.Context, f
 				return ec.fieldContext_Test_name(ctx, field)
 			case "assignmentID":
 				return ec.fieldContext_Test_assignmentID(ctx, field)
+			case "unitID":
+				return ec.fieldContext_Test_unitID(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Test", field.Name)
 		},
@@ -1924,6 +1939,8 @@ func (ec *executionContext) fieldContext_Mutation_createTest(ctx context.Context
 				return ec.fieldContext_Test_name(ctx, field)
 			case "assignmentID":
 				return ec.fieldContext_Test_assignmentID(ctx, field)
+			case "unitID":
+				return ec.fieldContext_Test_unitID(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Test", field.Name)
 		},
@@ -2648,6 +2665,8 @@ func (ec *executionContext) fieldContext_Query_tests(ctx context.Context, field 
 				return ec.fieldContext_Test_name(ctx, field)
 			case "assignmentID":
 				return ec.fieldContext_Test_assignmentID(ctx, field)
+			case "unitID":
+				return ec.fieldContext_Test_unitID(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Test", field.Name)
 		},
@@ -2708,6 +2727,8 @@ func (ec *executionContext) fieldContext_Query_test(ctx context.Context, field g
 				return ec.fieldContext_Test_name(ctx, field)
 			case "assignmentID":
 				return ec.fieldContext_Test_assignmentID(ctx, field)
+			case "unitID":
+				return ec.fieldContext_Test_unitID(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Test", field.Name)
 		},
@@ -3548,6 +3569,50 @@ func (ec *executionContext) fieldContext_Test_assignmentID(ctx context.Context, 
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Test_unitID(ctx context.Context, field graphql.CollectedField, obj *model.Test) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Test_unitID(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Test().UnitID(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Test_unitID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Test",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
 		},
@@ -6367,22 +6432,42 @@ func (ec *executionContext) _Test(ctx context.Context, sel ast.SelectionSet, obj
 			out.Values[i] = ec._Test_id(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "name":
 
 			out.Values[i] = ec._Test_name(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "assignmentID":
 
 			out.Values[i] = ec._Test_assignmentID(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
+		case "unitID":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Test_unitID(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

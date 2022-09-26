@@ -239,8 +239,44 @@ func (r *mutationResolver) RunTest(ctx context.Context, testID string) (bool, er
 		return false, fmt.Errorf("user not authenticated")
 	}
 
+	test, err := r.DB.GetTest(testID)
+	if err != nil {
+		return false, fmt.Errorf("error getting test: %w", err)
+	}
+	if test == nil {
+		return false, fmt.Errorf("test with id: %s does not exist", testID)
+	}
+
+	// Get assignment of test
+	assignment, err := r.DB.GetAssignment(fmt.Sprintf("%d", test.AssignmentID))
+	if err != nil {
+		return false, fmt.Errorf("error getting assignment: %w", err)
+	}
+	if assignment == nil {
+		return false, fmt.Errorf("assignment with id: %d does not exist", test.AssignmentID)
+	}
+
+	// Get class of assignment
+	class, err := r.DB.GetClass(fmt.Sprintf("%d", assignment.ClassID))
+	if err != nil {
+		return false, fmt.Errorf("error getting class: %w", err)
+	}
+	if class == nil {
+		return false, fmt.Errorf("class with id: %d does not exist", assignment.ClassID)
+	}
+
+	// Get unit name of test
+	unit, err := r.DB.GetUnitByID(fmt.Sprintf("%d", class.UnitID), false)
+	if err != nil {
+		return false, fmt.Errorf("error getting unit: %w", err)
+	}
+	if unit == nil {
+		return false, fmt.Errorf("unit with id: %d does not exist", class.UnitID)
+	}
+
 	body := map[string]string{
-		"s3Key": fmt.Sprintf("tests/test_%s.java", testID),
+		"s3KeyTestFile":    fmt.Sprintf("%s/%s/Tests/Test.java", unit.Name, assignment.Name),
+		"s3KeyProjectFile": fmt.Sprintf("%s/%s/Projects/", unit.Name, assignment.Name),
 	}
 
 	json, err := json.Marshal(body)
@@ -595,6 +631,22 @@ func (r *submissionResolver) Result(ctx context.Context, obj *model.Submission) 
 	return &model.Result{ID: fmt.Sprintf("%d", submission.Result.ID), Score: submission.Result.Score}, nil
 }
 
+// UnitID is the resolver for the unitID field.
+func (r *testResolver) UnitID(ctx context.Context, obj *model.Test) (string, error) {
+	assignment, err := r.DB.GetAssignment(obj.AssignmentID)
+	if err != nil {
+		return "", err
+	}
+
+	// Get the Unit ID via the Class ID
+	class, err := r.DB.GetClass(fmt.Sprintf("%d", assignment.ClassID))
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%d", class.UnitID), nil
+}
+
 // Classes is the resolver for the classes field.
 func (r *unitResolver) Classes(ctx context.Context, obj *model.Unit) ([]*model.Class, error) {
 	unit, err := r.DB.GetUnitByID(obj.ID, true)
@@ -629,6 +681,9 @@ func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 // Submission returns generated.SubmissionResolver implementation.
 func (r *Resolver) Submission() generated.SubmissionResolver { return &submissionResolver{r} }
 
+// Test returns generated.TestResolver implementation.
+func (r *Resolver) Test() generated.TestResolver { return &testResolver{r} }
+
 // Unit returns generated.UnitResolver implementation.
 func (r *Resolver) Unit() generated.UnitResolver { return &unitResolver{r} }
 
@@ -637,4 +692,5 @@ type classResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type submissionResolver struct{ *Resolver }
+type testResolver struct{ *Resolver }
 type unitResolver struct{ *Resolver }
