@@ -75,6 +75,8 @@ models:
         resolver: true
       submissions:
         resolver: true
+      unitID:
+        resolver: true
   Submission:
     fields:
       result:
