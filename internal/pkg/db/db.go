@@ -1,15 +1,17 @@
 package db
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/COMP4050/square-team-5/api/internal/pkg/db/models"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-
-	"github.com/COMP4050/square-team-5/api/internal/pkg/db/models"
 )
 
 type Database interface {
+	ResetDB() (Database, error)
+
 	CreateUser(email, passwordHash string, role models.UserRole) (*models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
 
@@ -43,12 +45,24 @@ type Database interface {
 }
 
 type database struct {
-	client *gorm.DB
+	client   *gorm.DB
+	filePath string
 }
 
 const PAGE_SIZE = 50
 
-var ErrRecordNotFound = gorm.ErrRecordNotFound
+var (
+	ErrRecordNotFound = gorm.ErrRecordNotFound
+
+	allModels = []interface{}{
+		&models.Unit{},
+		&models.Class{},
+		&models.Assignment{},
+		&models.Test{},
+		&models.Submission{},
+		&models.User{},
+	}
+)
 
 func NewDB(dbFilePath string) Database {
 	db, err := gorm.Open(sqlite.Open(dbFilePath), &gorm.Config{})
@@ -57,19 +71,25 @@ func NewDB(dbFilePath string) Database {
 	}
 
 	// Migrate the schema
-	err = db.AutoMigrate(
-		&models.Unit{},
-		&models.Class{},
-		&models.Assignment{},
-		&models.Test{},
-		&models.Submission{},
-		&models.User{},
-	)
-	if err != nil {
-		panic("failed to migrate database")
+	for _, model := range allModels {
+		err = db.AutoMigrate(model)
+		if err != nil {
+			panic("failed to migrate database")
+		}
 	}
 
-	return &database{client: db}
+	return &database{client: db, filePath: dbFilePath}
+}
+
+func (db *database) ResetDB() (Database, error) {
+	for _, model := range allModels {
+		err := db.client.Migrator().DropTable(model)
+		if err != nil {
+			return db, fmt.Errorf("error dropping table: %w", err)
+		}
+	}
+
+	return NewDB(db.filePath), nil
 }
 
 func (db *database) CreateUser(email, passwordHash string, role models.UserRole) (*models.User, error) {

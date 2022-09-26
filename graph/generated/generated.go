@@ -71,6 +71,7 @@ type ComplexityRoot struct {
 		CreateUnit       func(childComplexity int, input model.NewUnit) int
 		Login            func(childComplexity int, email string, password string) int
 		Register         func(childComplexity int, email string, password string) int
+		ResetDb          func(childComplexity int) int
 		RunTest          func(childComplexity int, testID string) int
 	}
 
@@ -131,6 +132,7 @@ type MutationResolver interface {
 	CreateSubmission(ctx context.Context, input model.NewSubmission) (*model.Submission, error)
 	Register(ctx context.Context, email string, password string) (string, error)
 	Login(ctx context.Context, email string, password string) (string, error)
+	ResetDb(ctx context.Context) (bool, error)
 }
 type QueryResolver interface {
 	Units(ctx context.Context, from *int) ([]*model.Unit, error)
@@ -314,6 +316,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.Register(childComplexity, args["email"].(string), args["password"].(string)), true
+
+	case "Mutation.resetDB":
+		if e.complexity.Mutation.ResetDb == nil {
+			break
+		}
+
+		return e.complexity.Mutation.ResetDb(childComplexity), true
 
 	case "Mutation.runTest":
 		if e.complexity.Mutation.RunTest == nil {
@@ -752,6 +761,9 @@ type Mutation {
   createSubmission(input: NewSubmission!): Submission!
   register(email: String!, password: String!): String!
   login(email: String!, password: String!): String!
+
+  # Admin Mutations
+  resetDB: Boolean!
 }
 `, BuiltIn: false},
 }
@@ -2038,6 +2050,50 @@ func (ec *executionContext) fieldContext_Mutation_login(ctx context.Context, fie
 	if fc.Args, err = ec.field_Mutation_login_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_resetDB(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_resetDB(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ResetDb(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_resetDB(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
 	}
 	return fc, nil
 }
@@ -5716,6 +5772,15 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_login(ctx, field)
+			})
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "resetDB":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_resetDB(ctx, field)
 			})
 
 			if out.Values[i] == graphql.Null {

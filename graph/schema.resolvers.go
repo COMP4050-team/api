@@ -12,25 +12,12 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/golang-jwt/jwt"
-
 	"github.com/COMP4050/square-team-5/api/graph/generated"
 	"github.com/COMP4050/square-team-5/api/graph/model"
 	"github.com/COMP4050/square-team-5/api/internal/pkg/db"
 	"github.com/COMP4050/square-team-5/api/internal/pkg/db/models"
+	"github.com/golang-jwt/jwt"
 )
-
-func getOffset(from *int) int {
-	if from == nil {
-		return 1
-	}
-
-	if *from < 1 {
-		return 1
-	}
-
-	return *from
-}
 
 // Tests is the resolver for the tests field.
 func (r *assignmentResolver) Tests(ctx context.Context, obj *model.Assignment) ([]*model.Test, error) {
@@ -353,6 +340,26 @@ func (r *mutationResolver) Login(ctx context.Context, email string, password str
 	}
 
 	return tokenString, nil
+}
+
+// ResetDb is the resolver for the resetDB field.
+func (r *mutationResolver) ResetDb(ctx context.Context) (bool, error) {
+	user := r.ExtractUser(ctx)
+	if user == nil {
+		return false, fmt.Errorf("user not authenticated")
+	}
+	if user.Role != models.UserRoleAdmin {
+		return false, fmt.Errorf("you must be an admin to reset the database")
+	}
+
+	newDB, err := r.DB.ResetDB()
+	if err != nil {
+		return false, err
+	}
+
+	r.DB = newDB
+
+	return true, nil
 }
 
 // Units is the resolver for the units field.
