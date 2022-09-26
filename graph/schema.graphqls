@@ -115,4 +115,7 @@ type Mutation {
   createSubmission(input: NewSubmission!): Submission!
   register(email: String!, password: String!): String!
   login(email: String!, password: String!): String!
+
+  # Admin Mutations
+  resetDB: Boolean!
 }

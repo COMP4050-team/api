@@ -7,6 +7,7 @@ package mocks
 import (
 	reflect "reflect"
 
+	db "github.com/COMP4050/square-team-5/api/internal/pkg/db"
 	models "github.com/COMP4050/square-team-5/api/internal/pkg/db/models"
 	gomock "github.com/golang/mock/gomock"
 )
@@ -392,4 +393,19 @@ func (m *MockDatabase) GetUserByEmail(email string) (*models.User, error) {
 func (mr *MockDatabaseMockRecorder) GetUserByEmail(email interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByEmail", reflect.TypeOf((*MockDatabase)(nil).GetUserByEmail), email)
+}
+
+// ResetDB mocks base method.
+func (m *MockDatabase) ResetDB() (db.Database, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ResetDB")
+	ret0, _ := ret[0].(db.Database)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ResetDB indicates an expected call of ResetDB.
+func (mr *MockDatabaseMockRecorder) ResetDB() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResetDB", reflect.TypeOf((*MockDatabase)(nil).ResetDB))
 }
