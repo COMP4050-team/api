@@ -12,6 +12,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/introspection"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 
 	"github.com/COMP4050/square-team-5/api/fixtures/mocks"
@@ -928,5 +929,43 @@ func TestLoginResolver(t *testing.T) {
 
 		err := c.Post(`mutation { login(email:"a@b.com", password: "wrong_password") }`, &resp)
 		assert.Error(t, err)
+	})
+}
+
+func TestResetDBMutation(t *testing.T) {
+	t.Parallel()
+
+	var resp struct {
+		ResetDB bool
+	}
+
+	// user := &models.User{Model: gorm.Model{ID: 1}, Email: "a@b.com", PasswordHash: "$2y$10$iVyaKJWb4LzkbCMNKl6biuNQNdBG1WSsn3/cMkg3VHg5RSpQTJW0K"}
+
+	t.Run("Reset DB", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := newClient(mockDB, true)
+
+		mockDB.EXPECT().ResetDB().Return(mockDB, nil)
+
+		c.MustPost(`mutation { resetDB() }`, &resp)
+
+		assert.True(t, resp.ResetDB)
+	})
+
+	t.Run("Reset DB - Unauthenticated", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := newClient(mockDB, false)
+
+		err := c.Post(`mutation { resetDB() }`, &resp)
+
+		require.Error(t, err)
+
+		assert.False(t, resp.ResetDB)
 	})
 }
