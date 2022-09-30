@@ -15,7 +15,7 @@ input NewUnit {
 type Class {
   id: ID!
   name: String!
-  unitID: ID!
+  unit: Unit!
   assignments: [Assignment!]!
 }
 
@@ -28,8 +28,8 @@ input NewClass {
 
 type Assignment {
   id: ID!
-  classID: ID!
-  unitID: ID!
+  class: Class!
+  unit: Unit!
   name: String!
   dueDate: Int!
   tests: [Test!]!
@@ -47,8 +47,9 @@ input NewAssignment {
 type Test {
   id: ID!
   name: String!
-  assignmentID: String!
-  unitID: String!
+  unit: Unit!
+  class: Class!
+  assignment: Assignment!
 }
 
 input NewTest {
@@ -63,6 +64,9 @@ type Submission {
   id: ID!
   studentID: String!
   result: Result!
+  unit: Unit!
+  class: Class!
+  assignment: Assignment!
 }
 
 input NewSubmission {

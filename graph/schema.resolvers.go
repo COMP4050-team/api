@@ -19,20 +19,47 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-// UnitID is the resolver for the unitID field.
-func (r *assignmentResolver) UnitID(ctx context.Context, obj *model.Assignment) (string, error) {
+// Class is the resolver for the class field.
+func (r *assignmentResolver) Class(ctx context.Context, obj *model.Assignment) (*model.Class, error) {
 	assignment, err := r.DB.GetAssignment(obj.ID)
 	if err != nil {
-		return "", err
+		return nil, err
+	}
+
+	class, err := r.DB.GetClass(fmt.Sprintf("%d", assignment.ClassID))
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.Class{
+		ID:   fmt.Sprintf("%d", class.ID),
+		Name: class.Name,
+	}, nil
+}
+
+// Unit is the resolver for the unit field.
+func (r *assignmentResolver) Unit(ctx context.Context, obj *model.Assignment) (*model.Unit, error) {
+	assignment, err := r.DB.GetAssignment(obj.ID)
+	if err != nil {
+		return nil, err
 	}
 
 	// Get the Unit ID via the Class ID
 	class, err := r.DB.GetClass(fmt.Sprintf("%d", assignment.ClassID))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return fmt.Sprintf("%d", class.UnitID), nil
+	unit, err := r.DB.GetUnitByID(fmt.Sprintf("%d", class.UnitID), false)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.Unit{
+		ID:   fmt.Sprintf("%d", unit.ID),
+		Name: unit.Name,
+		// Classes: []*model.Class{},
+	}, nil
 }
 
 // Tests is the resolver for the tests field.
@@ -83,6 +110,24 @@ func (r *assignmentResolver) Submissions(ctx context.Context, obj *model.Assignm
 	}
 
 	return gqlSubmissions, nil
+}
+
+// Unit is the resolver for the unit field.
+func (r *classResolver) Unit(ctx context.Context, obj *model.Class) (*model.Unit, error) {
+	class, err := r.DB.GetClass(obj.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	unit, err := r.DB.GetUnitByID(fmt.Sprintf("%d", class.UnitID), false)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.Unit{
+		ID:   fmt.Sprintf("%d", unit.ID),
+		Name: unit.Name,
+	}, nil
 }
 
 // Assignments is the resolver for the assignments field.
@@ -460,7 +505,7 @@ func (r *queryResolver) Classes(ctx context.Context, from *int) ([]*model.Class,
 
 	gqlClasses := []*model.Class{}
 	for _, class := range classes {
-		gqlClass := &model.Class{ID: fmt.Sprintf("%d", class.ID), Name: class.Name, UnitID: fmt.Sprintf("%d", class.UnitID)}
+		gqlClass := &model.Class{ID: fmt.Sprintf("%d", class.ID), Name: class.Name}
 		gqlClasses = append(gqlClasses, gqlClass)
 	}
 
@@ -514,7 +559,7 @@ func (r *queryResolver) Assignment(ctx context.Context, id string) (*model.Assig
 		return nil, nil
 	}
 
-	return &model.Assignment{ID: id, Name: assignment.Name, ClassID: fmt.Sprintf("%d", assignment.ClassID)}, nil
+	return &model.Assignment{ID: id, Name: assignment.Name}, nil
 }
 
 // Tests is the resolver for the tests field.
@@ -529,7 +574,7 @@ func (r *queryResolver) Tests(ctx context.Context, from *int) ([]*model.Test, er
 
 	gqlTests := []*model.Test{}
 	for _, test := range tests {
-		gqlTest := &model.Test{ID: fmt.Sprintf("%d", test.ID), Name: test.Name, AssignmentID: fmt.Sprintf("%d", test.AssignmentID)}
+		gqlTest := &model.Test{ID: fmt.Sprintf("%d", test.ID), Name: test.Name}
 		gqlTests = append(gqlTests, gqlTest)
 	}
 
@@ -631,20 +676,124 @@ func (r *submissionResolver) Result(ctx context.Context, obj *model.Submission) 
 	return &model.Result{ID: fmt.Sprintf("%d", submission.Result.ID), Score: submission.Result.Score}, nil
 }
 
-// UnitID is the resolver for the unitID field.
-func (r *testResolver) UnitID(ctx context.Context, obj *model.Test) (string, error) {
-	assignment, err := r.DB.GetAssignment(obj.AssignmentID)
+// Unit is the resolver for the unit field.
+func (r *submissionResolver) Unit(ctx context.Context, obj *model.Submission) (*model.Unit, error) {
+	submission, err := r.DB.GetSubmission(obj.ID)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	// Get the Unit ID via the Class ID
+	assignment, err := r.DB.GetAssignment(fmt.Sprintf("%d", submission.AssignmentID))
+	if err != nil {
+		return nil, err
+	}
+
 	class, err := r.DB.GetClass(fmt.Sprintf("%d", assignment.ClassID))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return fmt.Sprintf("%d", class.UnitID), nil
+	unit, err := r.DB.GetUnitByID(fmt.Sprintf("%d", class.UnitID), false)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.Unit{ID: fmt.Sprintf("%d", unit.ID), Name: unit.Name}, nil
+}
+
+// Class is the resolver for the class field.
+func (r *submissionResolver) Class(ctx context.Context, obj *model.Submission) (*model.Class, error) {
+	submission, err := r.DB.GetSubmission(obj.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	assignment, err := r.DB.GetAssignment(fmt.Sprintf("%d", submission.AssignmentID))
+	if err != nil {
+		return nil, err
+	}
+
+	class, err := r.DB.GetClass(fmt.Sprintf("%d", assignment.ClassID))
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.Class{ID: fmt.Sprintf("%d", class.ID), Name: class.Name}, nil
+}
+
+// Assignment is the resolver for the assignment field.
+func (r *submissionResolver) Assignment(ctx context.Context, obj *model.Submission) (*model.Assignment, error) {
+	submission, err := r.DB.GetSubmission(obj.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	assignment, err := r.DB.GetAssignment(fmt.Sprintf("%d", submission.AssignmentID))
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.Assignment{ID: fmt.Sprintf("%d", assignment.ID), Name: assignment.Name}, nil
+}
+
+// Unit is the resolver for the unit field.
+func (r *testResolver) Unit(ctx context.Context, obj *model.Test) (*model.Unit, error) {
+	test, err := r.DB.GetTest(obj.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	assignment, err := r.DB.GetAssignment(fmt.Sprintf("%d", test.AssignmentID))
+	if err != nil {
+		return nil, err
+	}
+
+	class, err := r.DB.GetClass(fmt.Sprintf("%d", assignment.ClassID))
+	if err != nil {
+		return nil, err
+	}
+
+	unit, err := r.DB.GetUnitByID(fmt.Sprintf("%d", class.UnitID), false)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.Unit{ID: fmt.Sprintf("%d", unit.ID), Name: unit.Name}, nil
+}
+
+// Class is the resolver for the class field.
+func (r *testResolver) Class(ctx context.Context, obj *model.Test) (*model.Class, error) {
+	test, err := r.DB.GetTest(obj.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	assignment, err := r.DB.GetAssignment(fmt.Sprintf("%d", test.AssignmentID))
+	if err != nil {
+		return nil, err
+	}
+
+	class, err := r.DB.GetClass(fmt.Sprintf("%d", assignment.ClassID))
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.Class{ID: fmt.Sprintf("%d", class.ID), Name: class.Name}, nil
+}
+
+// Assignment is the resolver for the assignment field.
+func (r *testResolver) Assignment(ctx context.Context, obj *model.Test) (*model.Assignment, error) {
+	test, err := r.DB.GetTest(obj.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	assignment, err := r.DB.GetAssignment(fmt.Sprintf("%d", test.AssignmentID))
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.Assignment{ID: fmt.Sprintf("%d", assignment.ID), Name: assignment.Name}, nil
 }
 
 // Classes is the resolver for the classes field.
@@ -660,7 +809,7 @@ func (r *unitResolver) Classes(ctx context.Context, obj *model.Unit) ([]*model.C
 	var gqlClasses []*model.Class
 
 	for _, class := range unit.Classes {
-		gqlClasses = append(gqlClasses, &model.Class{ID: fmt.Sprintf("%d", class.ID), Name: class.Name, UnitID: fmt.Sprintf("%d", class.UnitID)})
+		gqlClasses = append(gqlClasses, &model.Class{ID: fmt.Sprintf("%d", class.ID), Name: class.Name})
 	}
 
 	return gqlClasses, nil
