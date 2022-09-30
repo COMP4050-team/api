@@ -273,14 +273,27 @@ func TestClassResolver(t *testing.T) {
 		}, nil)
 		mockDB.EXPECT().GetAssignmentsForClass(uint(1)).Return([]*models.Assignment{{Model: gorm.Model{ID: 1}, Name: "Assignment 1"}}, nil)
 		mockDB.EXPECT().GetAssignmentsForClass(uint(2)).Return([]*models.Assignment{{Model: gorm.Model{ID: 2}, Name: "Assignment 2"}}, nil)
+		mockDB.EXPECT().GetClass("1").Return(&models.Class{
+			Model: gorm.Model{ID: 1}, Name: "Class 1", UnitID: 1,
+		}, nil)
+		mockDB.EXPECT().GetClass("2").Return(&models.Class{
+			Model: gorm.Model{ID: 2}, Name: "Class 2", UnitID: 1,
+		}, nil)
+		mockDB.EXPECT().GetUnitByID("1", false).Return(&models.Unit{
+			Model: gorm.Model{ID: 1}, Name: "COMP 1000",
+		}, nil)
+		mockDB.EXPECT().GetUnitByID("1", false).Return(&models.Unit{
+			Model: gorm.Model{ID: 1}, Name: "COMP 1000",
+		}, nil)
 
 		var resp struct {
 			Classes []struct {
-				ID, Name, UnitID string
-				Assignments      []model.Assignment
+				ID, Name    string
+				Unit        model.Unit
+				Assignments []model.Assignment
 			}
 		}
-		c.MustPost(`{ classes() { id name assignments { id name } unitID } }`, &resp)
+		c.MustPost(`{ classes() { id name assignments { id name } unit { id name } } }`, &resp)
 
 		assert.Equal(t, "1", resp.Classes[0].ID)
 		assert.Equal(t, "2", resp.Classes[1].ID)
@@ -288,8 +301,10 @@ func TestClassResolver(t *testing.T) {
 		assert.Equal(t, "Class 2", resp.Classes[1].Name)
 		assert.Equal(t, []model.Assignment{{ID: "1", Name: "Assignment 1"}}, resp.Classes[0].Assignments)
 		assert.Equal(t, []model.Assignment{{ID: "2", Name: "Assignment 2"}}, resp.Classes[1].Assignments)
-		assert.Equal(t, "1", resp.Classes[0].UnitID)
-		assert.Equal(t, "1", resp.Classes[1].UnitID)
+		assert.Equal(t, "1", resp.Classes[0].Unit.ID)
+		assert.Equal(t, "1", resp.Classes[1].Unit.ID)
+		assert.Equal(t, "1", resp.Classes[0].Unit.ID)
+		assert.Equal(t, "1", resp.Classes[1].Unit.ID)
 	})
 
 	t.Run("Get Class Not Found", func(t *testing.T) {
@@ -364,6 +379,57 @@ func TestAssignmentResolver(t *testing.T) {
 
 		assert.Equal(t, "1", resp.Assignment.ID)
 		assert.Equal(t, "Assignment 1", resp.Assignment.Name)
+	})
+
+	t.Run("Get Assignment With Class", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := newClient(mockDB, true)
+
+		mockDB.EXPECT().GetAssignment("1").Return(&models.Assignment{Model: gorm.Model{ID: 1}, Name: "Assignment 1", ClassID: 1}, nil)
+		mockDB.EXPECT().GetAssignment("1").Return(&models.Assignment{Model: gorm.Model{ID: 1}, Name: "Assignment 1", ClassID: 1}, nil)
+		mockDB.EXPECT().GetClass("1").Return(&models.Class{Model: gorm.Model{ID: 1}, Name: "Class 1", UnitID: 1}, nil)
+
+		var resp struct {
+			Assignment struct {
+				ID, Name string
+				Class    model.Class
+			}
+		}
+		c.MustPost(`{ assignment(id:"1") { id name class { id name } } }`, &resp)
+
+		assert.Equal(t, "1", resp.Assignment.ID)
+		assert.Equal(t, "Assignment 1", resp.Assignment.Name)
+		assert.Equal(t, "1", resp.Assignment.Class.ID)
+		assert.Equal(t, "Class 1", resp.Assignment.Class.Name)
+	})
+
+	t.Run("Get Assignment With Unit", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := newClient(mockDB, true)
+
+		mockDB.EXPECT().GetAssignment("1").Return(&models.Assignment{Model: gorm.Model{ID: 1}, Name: "Assignment 1", ClassID: 1}, nil)
+		mockDB.EXPECT().GetAssignment("1").Return(&models.Assignment{Model: gorm.Model{ID: 1}, Name: "Assignment 1", ClassID: 1}, nil)
+		mockDB.EXPECT().GetClass("1").Return(&models.Class{Model: gorm.Model{ID: 1}, Name: "Class 1", UnitID: 1}, nil)
+		mockDB.EXPECT().GetUnitByID("1", false).Return(&models.Unit{Model: gorm.Model{ID: 1}, Name: "Unit 1"}, nil)
+
+		var resp struct {
+			Assignment struct {
+				ID, Name string
+				Unit     model.Unit
+			}
+		}
+		c.MustPost(`{ assignment(id:"1") { id name unit { id name } } }`, &resp)
+
+		assert.Equal(t, "1", resp.Assignment.ID)
+		assert.Equal(t, "Assignment 1", resp.Assignment.Name)
+		assert.Equal(t, "1", resp.Assignment.Unit.ID)
+		assert.Equal(t, "Unit 1", resp.Assignment.Unit.Name)
 	})
 
 	t.Run("Get All Assignments", func(t *testing.T) {
@@ -488,22 +554,88 @@ func TestTestResolver(t *testing.T) {
 
 		mockDB.EXPECT().GetAllTests(1).Return([]*models.Test{
 			{Model: gorm.Model{ID: 1}, Name: "Test 1", AssignmentID: 1},
-			{Model: gorm.Model{ID: 1}, Name: "Test 2", AssignmentID: 1},
+			{Model: gorm.Model{ID: 2}, Name: "Test 2", AssignmentID: 1},
+		}, nil)
+		mockDB.EXPECT().GetTest("1").Return(&models.Test{
+			Model: gorm.Model{ID: 1}, Name: "Test 1", AssignmentID: 1,
+		}, nil)
+		mockDB.EXPECT().GetTest("2").Return(&models.Test{
+			Model: gorm.Model{ID: 2}, Name: "Test 2", AssignmentID: 1,
+		}, nil)
+		mockDB.EXPECT().GetAssignment("1").Return(&models.Assignment{
+			Model: gorm.Model{ID: 1}, Name: "Assignment 1", ClassID: 1,
+		}, nil)
+		mockDB.EXPECT().GetAssignment("1").Return(&models.Assignment{
+			Model: gorm.Model{ID: 1}, Name: "Assignment 1", ClassID: 1,
 		}, nil)
 
 		var resp struct {
 			Tests []struct {
-				ID, Name, AssignmentID string
+				ID, Name   string
+				Assignment model.Assignment
 			}
 		}
-		c.MustPost(`{ tests() { id name assignmentID } }`, &resp)
+		c.MustPost(`{ tests() { id name assignment { id name } } }`, &resp)
 
 		assert.Equal(t, "1", resp.Tests[0].ID)
-		assert.Equal(t, "1", resp.Tests[1].ID)
+		assert.Equal(t, "2", resp.Tests[1].ID)
 		assert.Equal(t, "Test 1", resp.Tests[0].Name)
 		assert.Equal(t, "Test 2", resp.Tests[1].Name)
-		assert.Equal(t, "1", resp.Tests[0].AssignmentID)
-		assert.Equal(t, "1", resp.Tests[1].AssignmentID)
+		assert.Equal(t, "1", resp.Tests[0].Assignment.ID)
+		assert.Equal(t, "1", resp.Tests[1].Assignment.ID)
+	})
+
+	t.Run("Get Test With Class", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := newClient(mockDB, true)
+
+		mockDB.EXPECT().GetTest("1").Return(&models.Test{Model: gorm.Model{ID: 1}, Name: "Test 1", AssignmentID: 1}, nil)
+		mockDB.EXPECT().GetTest("1").Return(&models.Test{Model: gorm.Model{ID: 1}, Name: "Test 1", AssignmentID: 1}, nil)
+		mockDB.EXPECT().GetAssignment("1").Return(&models.Assignment{Model: gorm.Model{ID: 1}, Name: "Assignment 1", ClassID: 1}, nil)
+		mockDB.EXPECT().GetClass("1").Return(&models.Class{Model: gorm.Model{ID: 1}, Name: "Class 1", UnitID: 1}, nil)
+
+		var resp struct {
+			Test struct {
+				ID, Name string
+				Class    model.Class
+			}
+		}
+		c.MustPost(`{ test(id:"1") { id name class { id name }} }`, &resp)
+
+		assert.Equal(t, "1", resp.Test.ID)
+		assert.Equal(t, "Test 1", resp.Test.Name)
+		assert.Equal(t, "1", resp.Test.Class.ID)
+		assert.Equal(t, "Class 1", resp.Test.Class.Name)
+	})
+
+	t.Run("Get Test With Unit", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := newClient(mockDB, true)
+
+		mockDB.EXPECT().GetTest("1").Return(&models.Test{Model: gorm.Model{ID: 1}, Name: "Test 1", AssignmentID: 1}, nil)
+		mockDB.EXPECT().GetTest("1").Return(&models.Test{Model: gorm.Model{ID: 1}, Name: "Test 1", AssignmentID: 1}, nil)
+		mockDB.EXPECT().GetAssignment("1").Return(&models.Assignment{Model: gorm.Model{ID: 1}, Name: "Assignment 1", ClassID: 1}, nil)
+		mockDB.EXPECT().GetClass("1").Return(&models.Class{Model: gorm.Model{ID: 1}, Name: "Class 1", UnitID: 1}, nil)
+		mockDB.EXPECT().GetUnitByID("1", false).Return(&models.Unit{Model: gorm.Model{ID: 1}, Name: "Unit 1"}, nil)
+
+		var resp struct {
+			Test struct {
+				ID, Name string
+				Unit     model.Unit
+			}
+		}
+		c.MustPost(`{ test(id:"1") { id name unit { id name }} }`, &resp)
+
+		assert.Equal(t, "1", resp.Test.ID)
+		assert.Equal(t, "Test 1", resp.Test.Name)
+		assert.Equal(t, "1", resp.Test.Unit.ID)
+		assert.Equal(t, "Unit 1", resp.Test.Unit.Name)
 	})
 
 	t.Run("Get Test Not Found", func(t *testing.T) {
@@ -578,6 +710,84 @@ func TestSubmissionResolver(t *testing.T) {
 
 		assert.Equal(t, "1", resp.Submission.ID)
 		assert.Equal(t, "44444444", resp.Submission.StudentID)
+	})
+
+	t.Run("Get Submission With Assignment", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := newClient(mockDB, true)
+
+		mockDB.EXPECT().GetSubmission("1").Return(&models.Submission{Model: gorm.Model{ID: 1}, StudentID: "44444444", AssignmentID: 1}, nil)
+		mockDB.EXPECT().GetSubmission("1").Return(&models.Submission{Model: gorm.Model{ID: 1}, StudentID: "44444444", AssignmentID: 1}, nil)
+		mockDB.EXPECT().GetAssignment("1").Return(&models.Assignment{Model: gorm.Model{ID: 1}, Name: "Assignment 1"}, nil)
+
+		var resp struct {
+			Submission struct {
+				ID, StudentID string
+				Assignment    model.Assignment
+			}
+		}
+		c.MustPost(`{ submission(id:"1") { id studentID assignment { id name } } }`, &resp)
+
+		assert.Equal(t, "1", resp.Submission.ID)
+		assert.Equal(t, "44444444", resp.Submission.StudentID)
+		assert.Equal(t, "1", resp.Submission.Assignment.ID)
+		assert.Equal(t, "Assignment 1", resp.Submission.Assignment.Name)
+	})
+
+	t.Run("Get Submission With Class", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := newClient(mockDB, true)
+
+		mockDB.EXPECT().GetSubmission("1").Return(&models.Submission{Model: gorm.Model{ID: 1}, StudentID: "44444444", AssignmentID: 1}, nil)
+		mockDB.EXPECT().GetSubmission("1").Return(&models.Submission{Model: gorm.Model{ID: 1}, StudentID: "44444444", AssignmentID: 1}, nil)
+		mockDB.EXPECT().GetAssignment("1").Return(&models.Assignment{Model: gorm.Model{ID: 1}, Name: "Assignment 1", ClassID: 1}, nil)
+		mockDB.EXPECT().GetClass("1").Return(&models.Class{Model: gorm.Model{ID: 1}, Name: "Class 1"}, nil)
+
+		var resp struct {
+			Submission struct {
+				ID, StudentID string
+				Class         model.Class
+			}
+		}
+		c.MustPost(`{ submission(id:"1") { id studentID class { id name } } }`, &resp)
+
+		assert.Equal(t, "1", resp.Submission.ID)
+		assert.Equal(t, "44444444", resp.Submission.StudentID)
+		assert.Equal(t, "1", resp.Submission.Class.ID)
+		assert.Equal(t, "Class 1", resp.Submission.Class.Name)
+	})
+
+	t.Run("Get Submission With Unit", func(t *testing.T) {
+		t.Parallel()
+
+		ctrl := gomock.NewController(t)
+		mockDB := mocks.NewMockDatabase(ctrl)
+		c := newClient(mockDB, true)
+
+		mockDB.EXPECT().GetSubmission("1").Return(&models.Submission{Model: gorm.Model{ID: 1}, StudentID: "44444444", AssignmentID: 1}, nil)
+		mockDB.EXPECT().GetSubmission("1").Return(&models.Submission{Model: gorm.Model{ID: 1}, StudentID: "44444444", AssignmentID: 1}, nil)
+		mockDB.EXPECT().GetAssignment("1").Return(&models.Assignment{Model: gorm.Model{ID: 1}, Name: "Assignment 1", ClassID: 1}, nil)
+		mockDB.EXPECT().GetClass("1").Return(&models.Class{Model: gorm.Model{ID: 1}, Name: "Class 1", UnitID: 1}, nil)
+		mockDB.EXPECT().GetUnitByID("1", false).Return(&models.Unit{Model: gorm.Model{ID: 1}, Name: "Unit 1"}, nil)
+
+		var resp struct {
+			Submission struct {
+				ID, StudentID string
+				Unit          model.Unit
+			}
+		}
+		c.MustPost(`{ submission(id:"1") { id studentID unit { id name } } }`, &resp)
+
+		assert.Equal(t, "1", resp.Submission.ID)
+		assert.Equal(t, "44444444", resp.Submission.StudentID)
+		assert.Equal(t, "1", resp.Submission.Unit.ID)
+		assert.Equal(t, "Unit 1", resp.Submission.Unit.Name)
 	})
 
 	t.Run("Get All Submissions", func(t *testing.T) {
