@@ -50,20 +50,20 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Assignment struct {
-		ClassID     func(childComplexity int) int
+		Class       func(childComplexity int) int
 		DueDate     func(childComplexity int) int
 		ID          func(childComplexity int) int
 		Name        func(childComplexity int) int
 		Submissions func(childComplexity int) int
 		Tests       func(childComplexity int) int
-		UnitID      func(childComplexity int) int
+		Unit        func(childComplexity int) int
 	}
 
 	Class struct {
 		Assignments func(childComplexity int) int
 		ID          func(childComplexity int) int
 		Name        func(childComplexity int) int
-		UnitID      func(childComplexity int) int
+		Unit        func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -101,16 +101,20 @@ type ComplexityRoot struct {
 	}
 
 	Submission struct {
-		ID        func(childComplexity int) int
-		Result    func(childComplexity int) int
-		StudentID func(childComplexity int) int
+		Assignment func(childComplexity int) int
+		Class      func(childComplexity int) int
+		ID         func(childComplexity int) int
+		Result     func(childComplexity int) int
+		StudentID  func(childComplexity int) int
+		Unit       func(childComplexity int) int
 	}
 
 	Test struct {
-		AssignmentID func(childComplexity int) int
-		ID           func(childComplexity int) int
-		Name         func(childComplexity int) int
-		UnitID       func(childComplexity int) int
+		Assignment func(childComplexity int) int
+		Class      func(childComplexity int) int
+		ID         func(childComplexity int) int
+		Name       func(childComplexity int) int
+		Unit       func(childComplexity int) int
 	}
 
 	Unit struct {
@@ -121,12 +125,14 @@ type ComplexityRoot struct {
 }
 
 type AssignmentResolver interface {
-	UnitID(ctx context.Context, obj *model.Assignment) (string, error)
+	Class(ctx context.Context, obj *model.Assignment) (*model.Class, error)
+	Unit(ctx context.Context, obj *model.Assignment) (*model.Unit, error)
 
 	Tests(ctx context.Context, obj *model.Assignment) ([]*model.Test, error)
 	Submissions(ctx context.Context, obj *model.Assignment) ([]*model.Submission, error)
 }
 type ClassResolver interface {
+	Unit(ctx context.Context, obj *model.Class) (*model.Unit, error)
 	Assignments(ctx context.Context, obj *model.Class) ([]*model.Assignment, error)
 }
 type MutationResolver interface {
@@ -156,9 +162,14 @@ type QueryResolver interface {
 }
 type SubmissionResolver interface {
 	Result(ctx context.Context, obj *model.Submission) (*model.Result, error)
+	Unit(ctx context.Context, obj *model.Submission) (*model.Unit, error)
+	Class(ctx context.Context, obj *model.Submission) (*model.Class, error)
+	Assignment(ctx context.Context, obj *model.Submission) (*model.Assignment, error)
 }
 type TestResolver interface {
-	UnitID(ctx context.Context, obj *model.Test) (string, error)
+	Unit(ctx context.Context, obj *model.Test) (*model.Unit, error)
+	Class(ctx context.Context, obj *model.Test) (*model.Class, error)
+	Assignment(ctx context.Context, obj *model.Test) (*model.Assignment, error)
 }
 type UnitResolver interface {
 	Classes(ctx context.Context, obj *model.Unit) ([]*model.Class, error)
@@ -179,12 +190,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
-	case "Assignment.classID":
-		if e.complexity.Assignment.ClassID == nil {
+	case "Assignment.class":
+		if e.complexity.Assignment.Class == nil {
 			break
 		}
 
-		return e.complexity.Assignment.ClassID(childComplexity), true
+		return e.complexity.Assignment.Class(childComplexity), true
 
 	case "Assignment.dueDate":
 		if e.complexity.Assignment.DueDate == nil {
@@ -221,12 +232,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Assignment.Tests(childComplexity), true
 
-	case "Assignment.unitID":
-		if e.complexity.Assignment.UnitID == nil {
+	case "Assignment.unit":
+		if e.complexity.Assignment.Unit == nil {
 			break
 		}
 
-		return e.complexity.Assignment.UnitID(childComplexity), true
+		return e.complexity.Assignment.Unit(childComplexity), true
 
 	case "Class.assignments":
 		if e.complexity.Class.Assignments == nil {
@@ -249,12 +260,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Class.Name(childComplexity), true
 
-	case "Class.unitID":
-		if e.complexity.Class.UnitID == nil {
+	case "Class.unit":
+		if e.complexity.Class.Unit == nil {
 			break
 		}
 
-		return e.complexity.Class.UnitID(childComplexity), true
+		return e.complexity.Class.Unit(childComplexity), true
 
 	case "Mutation.createAssignment":
 		if e.complexity.Mutation.CreateAssignment == nil {
@@ -531,6 +542,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Result.SubmissionID(childComplexity), true
 
+	case "Submission.assignment":
+		if e.complexity.Submission.Assignment == nil {
+			break
+		}
+
+		return e.complexity.Submission.Assignment(childComplexity), true
+
+	case "Submission.class":
+		if e.complexity.Submission.Class == nil {
+			break
+		}
+
+		return e.complexity.Submission.Class(childComplexity), true
+
 	case "Submission.id":
 		if e.complexity.Submission.ID == nil {
 			break
@@ -552,12 +577,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Submission.StudentID(childComplexity), true
 
-	case "Test.assignmentID":
-		if e.complexity.Test.AssignmentID == nil {
+	case "Submission.unit":
+		if e.complexity.Submission.Unit == nil {
 			break
 		}
 
-		return e.complexity.Test.AssignmentID(childComplexity), true
+		return e.complexity.Submission.Unit(childComplexity), true
+
+	case "Test.assignment":
+		if e.complexity.Test.Assignment == nil {
+			break
+		}
+
+		return e.complexity.Test.Assignment(childComplexity), true
+
+	case "Test.class":
+		if e.complexity.Test.Class == nil {
+			break
+		}
+
+		return e.complexity.Test.Class(childComplexity), true
 
 	case "Test.id":
 		if e.complexity.Test.ID == nil {
@@ -573,12 +612,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Test.Name(childComplexity), true
 
-	case "Test.unitID":
-		if e.complexity.Test.UnitID == nil {
+	case "Test.unit":
+		if e.complexity.Test.Unit == nil {
 			break
 		}
 
-		return e.complexity.Test.UnitID(childComplexity), true
+		return e.complexity.Test.Unit(childComplexity), true
 
 	case "Unit.classes":
 		if e.complexity.Unit.Classes == nil {
@@ -691,7 +730,7 @@ input NewUnit {
 type Class {
   id: ID!
   name: String!
-  unitID: ID!
+  unit: Unit!
   assignments: [Assignment!]!
 }
 
@@ -704,8 +743,8 @@ input NewClass {
 
 type Assignment {
   id: ID!
-  classID: ID!
-  unitID: ID!
+  class: Class!
+  unit: Unit!
   name: String!
   dueDate: Int!
   tests: [Test!]!
@@ -723,8 +762,9 @@ input NewAssignment {
 type Test {
   id: ID!
   name: String!
-  assignmentID: String!
-  unitID: String!
+  unit: Unit!
+  class: Class!
+  assignment: Assignment!
 }
 
 input NewTest {
@@ -739,6 +779,9 @@ type Submission {
   id: ID!
   studentID: String!
   result: Result!
+  unit: Unit!
+  class: Class!
+  assignment: Assignment!
 }
 
 input NewSubmission {
@@ -1221,8 +1264,8 @@ func (ec *executionContext) fieldContext_Assignment_id(ctx context.Context, fiel
 	return fc, nil
 }
 
-func (ec *executionContext) _Assignment_classID(ctx context.Context, field graphql.CollectedField, obj *model.Assignment) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Assignment_classID(ctx, field)
+func (ec *executionContext) _Assignment_class(ctx context.Context, field graphql.CollectedField, obj *model.Assignment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Assignment_class(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1235,7 +1278,7 @@ func (ec *executionContext) _Assignment_classID(ctx context.Context, field graph
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ClassID, nil
+		return ec.resolvers.Assignment().Class(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1247,63 +1290,81 @@ func (ec *executionContext) _Assignment_classID(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*model.Class)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNClass2ᚖgithubᚗcomᚋCOMP4050ᚋsquareᚑteamᚑ5ᚋapiᚋgraphᚋmodelᚐClass(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Assignment_classID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Assignment",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Assignment_unitID(ctx context.Context, field graphql.CollectedField, obj *model.Assignment) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Assignment_unitID(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Assignment().UnitID(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Assignment_unitID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Assignment_class(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Assignment",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Class_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Class_name(ctx, field)
+			case "unit":
+				return ec.fieldContext_Class_unit(ctx, field)
+			case "assignments":
+				return ec.fieldContext_Class_assignments(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Class", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Assignment_unit(ctx context.Context, field graphql.CollectedField, obj *model.Assignment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Assignment_unit(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Assignment().Unit(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Unit)
+	fc.Result = res
+	return ec.marshalNUnit2ᚖgithubᚗcomᚋCOMP4050ᚋsquareᚑteamᚑ5ᚋapiᚋgraphᚋmodelᚐUnit(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Assignment_unit(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Assignment",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Unit_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Unit_name(ctx, field)
+			case "classes":
+				return ec.fieldContext_Unit_classes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Unit", field.Name)
 		},
 	}
 	return fc, nil
@@ -1440,10 +1501,12 @@ func (ec *executionContext) fieldContext_Assignment_tests(ctx context.Context, f
 				return ec.fieldContext_Test_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Test_name(ctx, field)
-			case "assignmentID":
-				return ec.fieldContext_Test_assignmentID(ctx, field)
-			case "unitID":
-				return ec.fieldContext_Test_unitID(ctx, field)
+			case "unit":
+				return ec.fieldContext_Test_unit(ctx, field)
+			case "class":
+				return ec.fieldContext_Test_class(ctx, field)
+			case "assignment":
+				return ec.fieldContext_Test_assignment(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Test", field.Name)
 		},
@@ -1496,6 +1559,12 @@ func (ec *executionContext) fieldContext_Assignment_submissions(ctx context.Cont
 				return ec.fieldContext_Submission_studentID(ctx, field)
 			case "result":
 				return ec.fieldContext_Submission_result(ctx, field)
+			case "unit":
+				return ec.fieldContext_Submission_unit(ctx, field)
+			case "class":
+				return ec.fieldContext_Submission_class(ctx, field)
+			case "assignment":
+				return ec.fieldContext_Submission_assignment(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Submission", field.Name)
 		},
@@ -1591,8 +1660,8 @@ func (ec *executionContext) fieldContext_Class_name(ctx context.Context, field g
 	return fc, nil
 }
 
-func (ec *executionContext) _Class_unitID(ctx context.Context, field graphql.CollectedField, obj *model.Class) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Class_unitID(ctx, field)
+func (ec *executionContext) _Class_unit(ctx context.Context, field graphql.CollectedField, obj *model.Class) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Class_unit(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1605,7 +1674,7 @@ func (ec *executionContext) _Class_unitID(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.UnitID, nil
+		return ec.resolvers.Class().Unit(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1617,19 +1686,27 @@ func (ec *executionContext) _Class_unitID(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*model.Unit)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNUnit2ᚖgithubᚗcomᚋCOMP4050ᚋsquareᚑteamᚑ5ᚋapiᚋgraphᚋmodelᚐUnit(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Class_unitID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Class_unit(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Class",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Unit_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Unit_name(ctx, field)
+			case "classes":
+				return ec.fieldContext_Unit_classes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Unit", field.Name)
 		},
 	}
 	return fc, nil
@@ -1676,10 +1753,10 @@ func (ec *executionContext) fieldContext_Class_assignments(ctx context.Context, 
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Assignment_id(ctx, field)
-			case "classID":
-				return ec.fieldContext_Assignment_classID(ctx, field)
-			case "unitID":
-				return ec.fieldContext_Assignment_unitID(ctx, field)
+			case "class":
+				return ec.fieldContext_Assignment_class(ctx, field)
+			case "unit":
+				return ec.fieldContext_Assignment_unit(ctx, field)
 			case "name":
 				return ec.fieldContext_Assignment_name(ctx, field)
 			case "dueDate":
@@ -1801,8 +1878,8 @@ func (ec *executionContext) fieldContext_Mutation_createClass(ctx context.Contex
 				return ec.fieldContext_Class_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Class_name(ctx, field)
-			case "unitID":
-				return ec.fieldContext_Class_unitID(ctx, field)
+			case "unit":
+				return ec.fieldContext_Class_unit(ctx, field)
 			case "assignments":
 				return ec.fieldContext_Class_assignments(ctx, field)
 			}
@@ -1864,10 +1941,10 @@ func (ec *executionContext) fieldContext_Mutation_createAssignment(ctx context.C
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Assignment_id(ctx, field)
-			case "classID":
-				return ec.fieldContext_Assignment_classID(ctx, field)
-			case "unitID":
-				return ec.fieldContext_Assignment_unitID(ctx, field)
+			case "class":
+				return ec.fieldContext_Assignment_class(ctx, field)
+			case "unit":
+				return ec.fieldContext_Assignment_unit(ctx, field)
 			case "name":
 				return ec.fieldContext_Assignment_name(ctx, field)
 			case "dueDate":
@@ -1937,10 +2014,12 @@ func (ec *executionContext) fieldContext_Mutation_createTest(ctx context.Context
 				return ec.fieldContext_Test_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Test_name(ctx, field)
-			case "assignmentID":
-				return ec.fieldContext_Test_assignmentID(ctx, field)
-			case "unitID":
-				return ec.fieldContext_Test_unitID(ctx, field)
+			case "unit":
+				return ec.fieldContext_Test_unit(ctx, field)
+			case "class":
+				return ec.fieldContext_Test_class(ctx, field)
+			case "assignment":
+				return ec.fieldContext_Test_assignment(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Test", field.Name)
 		},
@@ -2059,6 +2138,12 @@ func (ec *executionContext) fieldContext_Mutation_createSubmission(ctx context.C
 				return ec.fieldContext_Submission_studentID(ctx, field)
 			case "result":
 				return ec.fieldContext_Submission_result(ctx, field)
+			case "unit":
+				return ec.fieldContext_Submission_unit(ctx, field)
+			case "class":
+				return ec.fieldContext_Submission_class(ctx, field)
+			case "assignment":
+				return ec.fieldContext_Submission_assignment(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Submission", field.Name)
 		},
@@ -2397,8 +2482,8 @@ func (ec *executionContext) fieldContext_Query_classes(ctx context.Context, fiel
 				return ec.fieldContext_Class_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Class_name(ctx, field)
-			case "unitID":
-				return ec.fieldContext_Class_unitID(ctx, field)
+			case "unit":
+				return ec.fieldContext_Class_unit(ctx, field)
 			case "assignments":
 				return ec.fieldContext_Class_assignments(ctx, field)
 			}
@@ -2459,8 +2544,8 @@ func (ec *executionContext) fieldContext_Query_class(ctx context.Context, field 
 				return ec.fieldContext_Class_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Class_name(ctx, field)
-			case "unitID":
-				return ec.fieldContext_Class_unitID(ctx, field)
+			case "unit":
+				return ec.fieldContext_Class_unit(ctx, field)
 			case "assignments":
 				return ec.fieldContext_Class_assignments(ctx, field)
 			}
@@ -2522,10 +2607,10 @@ func (ec *executionContext) fieldContext_Query_assignments(ctx context.Context, 
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Assignment_id(ctx, field)
-			case "classID":
-				return ec.fieldContext_Assignment_classID(ctx, field)
-			case "unitID":
-				return ec.fieldContext_Assignment_unitID(ctx, field)
+			case "class":
+				return ec.fieldContext_Assignment_class(ctx, field)
+			case "unit":
+				return ec.fieldContext_Assignment_unit(ctx, field)
 			case "name":
 				return ec.fieldContext_Assignment_name(ctx, field)
 			case "dueDate":
@@ -2590,10 +2675,10 @@ func (ec *executionContext) fieldContext_Query_assignment(ctx context.Context, f
 			switch field.Name {
 			case "id":
 				return ec.fieldContext_Assignment_id(ctx, field)
-			case "classID":
-				return ec.fieldContext_Assignment_classID(ctx, field)
-			case "unitID":
-				return ec.fieldContext_Assignment_unitID(ctx, field)
+			case "class":
+				return ec.fieldContext_Assignment_class(ctx, field)
+			case "unit":
+				return ec.fieldContext_Assignment_unit(ctx, field)
 			case "name":
 				return ec.fieldContext_Assignment_name(ctx, field)
 			case "dueDate":
@@ -2663,10 +2748,12 @@ func (ec *executionContext) fieldContext_Query_tests(ctx context.Context, field 
 				return ec.fieldContext_Test_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Test_name(ctx, field)
-			case "assignmentID":
-				return ec.fieldContext_Test_assignmentID(ctx, field)
-			case "unitID":
-				return ec.fieldContext_Test_unitID(ctx, field)
+			case "unit":
+				return ec.fieldContext_Test_unit(ctx, field)
+			case "class":
+				return ec.fieldContext_Test_class(ctx, field)
+			case "assignment":
+				return ec.fieldContext_Test_assignment(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Test", field.Name)
 		},
@@ -2725,10 +2812,12 @@ func (ec *executionContext) fieldContext_Query_test(ctx context.Context, field g
 				return ec.fieldContext_Test_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Test_name(ctx, field)
-			case "assignmentID":
-				return ec.fieldContext_Test_assignmentID(ctx, field)
-			case "unitID":
-				return ec.fieldContext_Test_unitID(ctx, field)
+			case "unit":
+				return ec.fieldContext_Test_unit(ctx, field)
+			case "class":
+				return ec.fieldContext_Test_class(ctx, field)
+			case "assignment":
+				return ec.fieldContext_Test_assignment(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Test", field.Name)
 		},
@@ -2792,6 +2881,12 @@ func (ec *executionContext) fieldContext_Query_submissions(ctx context.Context, 
 				return ec.fieldContext_Submission_studentID(ctx, field)
 			case "result":
 				return ec.fieldContext_Submission_result(ctx, field)
+			case "unit":
+				return ec.fieldContext_Submission_unit(ctx, field)
+			case "class":
+				return ec.fieldContext_Submission_class(ctx, field)
+			case "assignment":
+				return ec.fieldContext_Submission_assignment(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Submission", field.Name)
 		},
@@ -2852,6 +2947,12 @@ func (ec *executionContext) fieldContext_Query_submission(ctx context.Context, f
 				return ec.fieldContext_Submission_studentID(ctx, field)
 			case "result":
 				return ec.fieldContext_Submission_result(ctx, field)
+			case "unit":
+				return ec.fieldContext_Submission_unit(ctx, field)
+			case "class":
+				return ec.fieldContext_Submission_class(ctx, field)
+			case "assignment":
+				return ec.fieldContext_Submission_assignment(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Submission", field.Name)
 		},
@@ -3444,6 +3545,172 @@ func (ec *executionContext) fieldContext_Submission_result(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _Submission_unit(ctx context.Context, field graphql.CollectedField, obj *model.Submission) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Submission_unit(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Submission().Unit(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Unit)
+	fc.Result = res
+	return ec.marshalNUnit2ᚖgithubᚗcomᚋCOMP4050ᚋsquareᚑteamᚑ5ᚋapiᚋgraphᚋmodelᚐUnit(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Submission_unit(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Submission",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Unit_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Unit_name(ctx, field)
+			case "classes":
+				return ec.fieldContext_Unit_classes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Unit", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Submission_class(ctx context.Context, field graphql.CollectedField, obj *model.Submission) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Submission_class(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Submission().Class(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Class)
+	fc.Result = res
+	return ec.marshalNClass2ᚖgithubᚗcomᚋCOMP4050ᚋsquareᚑteamᚑ5ᚋapiᚋgraphᚋmodelᚐClass(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Submission_class(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Submission",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Class_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Class_name(ctx, field)
+			case "unit":
+				return ec.fieldContext_Class_unit(ctx, field)
+			case "assignments":
+				return ec.fieldContext_Class_assignments(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Class", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Submission_assignment(ctx context.Context, field graphql.CollectedField, obj *model.Submission) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Submission_assignment(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Submission().Assignment(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Assignment)
+	fc.Result = res
+	return ec.marshalNAssignment2ᚖgithubᚗcomᚋCOMP4050ᚋsquareᚑteamᚑ5ᚋapiᚋgraphᚋmodelᚐAssignment(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Submission_assignment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Submission",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Assignment_id(ctx, field)
+			case "class":
+				return ec.fieldContext_Assignment_class(ctx, field)
+			case "unit":
+				return ec.fieldContext_Assignment_unit(ctx, field)
+			case "name":
+				return ec.fieldContext_Assignment_name(ctx, field)
+			case "dueDate":
+				return ec.fieldContext_Assignment_dueDate(ctx, field)
+			case "tests":
+				return ec.fieldContext_Assignment_tests(ctx, field)
+			case "submissions":
+				return ec.fieldContext_Assignment_submissions(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Assignment", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Test_id(ctx context.Context, field graphql.CollectedField, obj *model.Test) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Test_id(ctx, field)
 	if err != nil {
@@ -3532,8 +3799,8 @@ func (ec *executionContext) fieldContext_Test_name(ctx context.Context, field gr
 	return fc, nil
 }
 
-func (ec *executionContext) _Test_assignmentID(ctx context.Context, field graphql.CollectedField, obj *model.Test) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Test_assignmentID(ctx, field)
+func (ec *executionContext) _Test_unit(ctx context.Context, field graphql.CollectedField, obj *model.Test) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Test_unit(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3546,7 +3813,7 @@ func (ec *executionContext) _Test_assignmentID(ctx context.Context, field graphq
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.AssignmentID, nil
+		return ec.resolvers.Test().Unit(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3558,63 +3825,141 @@ func (ec *executionContext) _Test_assignmentID(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*model.Unit)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNUnit2ᚖgithubᚗcomᚋCOMP4050ᚋsquareᚑteamᚑ5ᚋapiᚋgraphᚋmodelᚐUnit(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Test_assignmentID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Test",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Test_unitID(ctx context.Context, field graphql.CollectedField, obj *model.Test) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Test_unitID(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Test().UnitID(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Test_unitID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Test_unit(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Test",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Unit_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Unit_name(ctx, field)
+			case "classes":
+				return ec.fieldContext_Unit_classes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Unit", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Test_class(ctx context.Context, field graphql.CollectedField, obj *model.Test) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Test_class(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Test().Class(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Class)
+	fc.Result = res
+	return ec.marshalNClass2ᚖgithubᚗcomᚋCOMP4050ᚋsquareᚑteamᚑ5ᚋapiᚋgraphᚋmodelᚐClass(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Test_class(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Test",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Class_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Class_name(ctx, field)
+			case "unit":
+				return ec.fieldContext_Class_unit(ctx, field)
+			case "assignments":
+				return ec.fieldContext_Class_assignments(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Class", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Test_assignment(ctx context.Context, field graphql.CollectedField, obj *model.Test) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Test_assignment(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Test().Assignment(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Assignment)
+	fc.Result = res
+	return ec.marshalNAssignment2ᚖgithubᚗcomᚋCOMP4050ᚋsquareᚑteamᚑ5ᚋapiᚋgraphᚋmodelᚐAssignment(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Test_assignment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Test",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Assignment_id(ctx, field)
+			case "class":
+				return ec.fieldContext_Assignment_class(ctx, field)
+			case "unit":
+				return ec.fieldContext_Assignment_unit(ctx, field)
+			case "name":
+				return ec.fieldContext_Assignment_name(ctx, field)
+			case "dueDate":
+				return ec.fieldContext_Assignment_dueDate(ctx, field)
+			case "tests":
+				return ec.fieldContext_Assignment_tests(ctx, field)
+			case "submissions":
+				return ec.fieldContext_Assignment_submissions(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Assignment", field.Name)
 		},
 	}
 	return fc, nil
@@ -3751,8 +4096,8 @@ func (ec *executionContext) fieldContext_Unit_classes(ctx context.Context, field
 				return ec.fieldContext_Class_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Class_name(ctx, field)
-			case "unitID":
-				return ec.fieldContext_Class_unitID(ctx, field)
+			case "unit":
+				return ec.fieldContext_Class_unit(ctx, field)
 			case "assignments":
 				return ec.fieldContext_Class_assignments(ctx, field)
 			}
@@ -5748,14 +6093,7 @@ func (ec *executionContext) _Assignment(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "classID":
-
-			out.Values[i] = ec._Assignment_classID(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "unitID":
+		case "class":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -5764,7 +6102,27 @@ func (ec *executionContext) _Assignment(ctx context.Context, sel ast.SelectionSe
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Assignment_unitID(ctx, field, obj)
+				res = ec._Assignment_class(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "unit":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Assignment_unit(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -5864,13 +6222,26 @@ func (ec *executionContext) _Class(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "unitID":
+		case "unit":
+			field := field
 
-			out.Values[i] = ec._Class_unitID(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Class_unit(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
 			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		case "assignments":
 			field := field
 
@@ -6406,6 +6777,66 @@ func (ec *executionContext) _Submission(ctx context.Context, sel ast.SelectionSe
 				return innerFunc(ctx)
 
 			})
+		case "unit":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Submission_unit(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "class":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Submission_class(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "assignment":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Submission_assignment(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6441,14 +6872,7 @@ func (ec *executionContext) _Test(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "assignmentID":
-
-			out.Values[i] = ec._Test_assignmentID(ctx, field, obj)
-
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "unitID":
+		case "unit":
 			field := field
 
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -6457,7 +6881,47 @@ func (ec *executionContext) _Test(ctx context.Context, sel ast.SelectionSet, obj
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Test_unitID(ctx, field, obj)
+				res = ec._Test_unit(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "class":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Test_class(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "assignment":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Test_assignment(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

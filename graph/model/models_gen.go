@@ -4,8 +4,8 @@ package model
 
 type Assignment struct {
 	ID          string        `json:"id"`
-	ClassID     string        `json:"classID"`
-	UnitID      string        `json:"unitID"`
+	Class       *Class        `json:"class"`
+	Unit        *Unit         `json:"unit"`
 	Name        string        `json:"name"`
 	DueDate     int           `json:"dueDate"`
 	Tests       []*Test       `json:"tests"`
@@ -15,7 +15,7 @@ type Assignment struct {
 type Class struct {
 	ID          string        `json:"id"`
 	Name        string        `json:"name"`
-	UnitID      string        `json:"unitID"`
+	Unit        *Unit         `json:"unit"`
 	Assignments []*Assignment `json:"assignments"`
 }
 
@@ -53,16 +53,20 @@ type Result struct {
 }
 
 type Submission struct {
-	ID        string  `json:"id"`
-	StudentID string  `json:"studentID"`
-	Result    *Result `json:"result"`
+	ID         string      `json:"id"`
+	StudentID  string      `json:"studentID"`
+	Result     *Result     `json:"result"`
+	Unit       *Unit       `json:"unit"`
+	Class      *Class      `json:"class"`
+	Assignment *Assignment `json:"assignment"`
 }
 
 type Test struct {
-	ID           string `json:"id"`
-	Name         string `json:"name"`
-	AssignmentID string `json:"assignmentID"`
-	UnitID       string `json:"unitID"`
+	ID         string      `json:"id"`
+	Name       string      `json:"name"`
+	Unit       *Unit       `json:"unit"`
+	Class      *Class      `json:"class"`
+	Assignment *Assignment `json:"assignment"`
 }
 
 type Unit struct {

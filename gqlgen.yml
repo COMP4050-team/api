@@ -69,19 +69,33 @@ models:
     fields:
       assignments:
         resolver: true
+      unit:
+        resolver: true
   Assignment:
     fields:
       tests:
         resolver: true
       submissions:
         resolver: true
-      unitID:
+      unit:
+        resolver: true
+      class:
         resolver: true
   Submission:
     fields:
+      unit:
+        resolver: true
+      class:
+        resolver: true
+      assignment:
+        resolver: true
       result:
         resolver: true
   Test:
     fields:
-      unitID:
+      unit:
+        resolver: true
+      class:
+        resolver: true
+      assignment:
         resolver: true

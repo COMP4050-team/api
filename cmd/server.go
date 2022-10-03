@@ -38,7 +38,7 @@ func main() {
 	r.Use(cors.New(cors.Config{
 		AllowOriginFunc:  allowedOrigin,
 		AllowCredentials: true,
-		AllowHeaders:     []string{"Content-Type", "Authorization"},
+		AllowHeaders:     []string{"Content-Type", "Authorization", "baggage", "sentry-trace"},
 	}))
 	r.Use(auth.AuthHandler(config.JWTSecret))
 
