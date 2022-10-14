@@ -669,7 +669,7 @@ func TestTestResolver(t *testing.T) {
 		var resp struct {
 			CreateTest struct{ ID, Name string }
 		}
-		c.MustPost(`mutation { createTest(input: {name: "Test 1", storagePath: "tests/1/test_1.java",assignmentID: "1"}) { id name } }`, &resp)
+		c.MustPost(`mutation { createTest(input: {name: "Test 1", assignmentID: "1"}) { id name } }`, &resp)
 
 		assert.Equal(t, "1", resp.CreateTest.ID)
 		assert.Equal(t, "Test 1", resp.CreateTest.Name)
@@ -685,7 +685,7 @@ func TestTestResolver(t *testing.T) {
 		var resp struct {
 			CreateTest struct{ ID, Name string }
 		}
-		err := c.Post(`mutation { createTest(input: {name: "Test 1", storagePath: "tests/1/test_1.java",assignmentID: "1"}) { id name } }`, &resp)
+		err := c.Post(`mutation { createTest(input: {name: "Test 1", assignmentID: "1"}) { id name } }`, &resp)
 
 		assert.ErrorContains(t, err, "user not authenticated")
 	})
