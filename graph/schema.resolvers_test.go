@@ -664,7 +664,7 @@ func TestTestResolver(t *testing.T) {
 		c := newClient(mockDB, true)
 
 		// Storage path here is tests/{assignmentID}/test_{testID}.java
-		mockDB.EXPECT().CreateTest("Test 1", "tests/1/test_1.java", uint(1)).Return(&models.Test{Model: gorm.Model{ID: 1}, Name: "Test 1"}, nil)
+		mockDB.EXPECT().CreateTest("Test 1", uint(1)).Return(&models.Test{Model: gorm.Model{ID: 1}, Name: "Test 1"}, nil)
 
 		var resp struct {
 			CreateTest struct{ ID, Name string }
