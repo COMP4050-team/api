@@ -14,4 +14,4 @@ WORKDIR /app
 
 COPY --from=builder /app/main /app
 
-CMD ["/app/main", "-test-executor-endpoint=https://test-executor.fly.dev/"]
+CMD ["/app/main", "-test-executor-endpoint=https://test-executor-rs.fly.dev/"]
