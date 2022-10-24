@@ -6,7 +6,7 @@ require (
 	github.com/99designs/gqlgen v0.17.20
 	github.com/gin-contrib/cors v1.4.0
 	github.com/golang/mock v1.6.0
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	github.com/vektah/gqlparser/v2 v2.5.1
 	gorm.io/driver/sqlite v1.3.6
 	gorm.io/gorm v1.23.10
